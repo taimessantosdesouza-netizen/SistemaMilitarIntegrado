@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   Shield, Lock, LogOut, Radio, Users, Car, FileText, AlertTriangle,
   CheckCircle2, Clock, Search, Plus, Copy, Check, Award,
   UserCheck, KeyRound, Scale, Megaphone, Database,
-  Activity, ShieldAlert, FolderLock, ChevronDown, ChevronRight, Trash2
+  Activity, ShieldAlert, Folder, FolderOpen, Trash2, ChevronDown, ChevronUp,
+  Bell, X, Volume2
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
@@ -187,6 +188,12 @@ export default function App() {
   const [globalSearch, setGlobalSearch] = useState('');
   const [copiedId, setCopiedId] = useState(null);
 
+  // Notificações no canto inferior direito para patente alta
+  const [reportToasts, setReportToasts] = useState([]);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const notifiedReportIdsRef = useRef(new Set(INITIAL_REPORTS.map((r) => r.id)));
+  const audioCtxRef = useRef(null);
+
   const [vtrPrefix, setVtrPrefix] = useState('Caracterizada');
   const [patrolArea, setPatrolArea] = useState('GV e Horton');
   const [shiftSummary, setShiftSummary] = useState('');
@@ -212,7 +219,9 @@ export default function App() {
   });
   const [reviewNotesMap, setReviewNotesMap] = useState({});
   const [reportFilterStatus, setReportFilterStatus] = useState('TODOS');
-  const [commandFolderOpen, setCommandFolderOpen] = useState(false);
+  const [cmdReportsFolderOpen, setCmdReportsFolderOpen] = useState(false);
+  const [cmdReportFilterStatus, setCmdReportFilterStatus] = useState('PENDENTE');
+  const [cmdReviewNotesMap, setCmdReviewNotesMap] = useState({});
 
   const [dutyFilterOfficer, setDutyFilterOfficer] = useState('TODOS');
   const [dutyFilterStatus, setDutyFilterStatus] = useState('TODOS');
@@ -236,6 +245,83 @@ export default function App() {
   const isTopCommand = currentUser && currentUser.rank_level >= 4;
   const isHighRank = currentUser && currentUser.rank_level >= 4;
 
+  const playNotificationSound = useCallback(() => {
+    if (!soundEnabled) return;
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContextClass();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      const now = ctx.currentTime;
+      const notes = [880, 1174.66];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.14);
+
+        gain.gain.setValueAtTime(0.001, now + idx * 0.14);
+        gain.gain.exponentialRampToValueAtTime(0.14, now + idx * 0.14 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.14 + 0.18);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now + idx * 0.14);
+        osc.stop(now + idx * 0.14 + 0.2);
+      });
+    } catch {
+      // Navegador pode bloquear áudio antes de interação do usuário
+    }
+  }, [soundEnabled]);
+
+  const triggerReportNotification = useCallback(
+    (rep) => {
+      if (!rep || !rep.id) return;
+      if (notifiedReportIdsRef.current.has(rep.id)) return;
+      notifiedReportIdsRef.current.add(rep.id);
+
+      if (!currentUser || currentUser.rank_level < 4) return;
+
+      const toastId = `${rep.id}-${Date.now()}`;
+      const newToast = {
+        toastId,
+        reportId: rep.id,
+        author_nick: rep.author_nick,
+        author_rank: rep.author_rank,
+        location: rep.location || 'Local não informado',
+        incident_code: rep.incident_code || 'Código 1',
+        outcome: rep.outcome || 'Registrado',
+        created_at: rep.created_at || new Date().toISOString()
+      };
+
+      setReportToasts((prev) => [newToast, ...prev].slice(0, 4));
+      playNotificationSound();
+
+      setTimeout(() => {
+        setReportToasts((prev) => prev.filter((t) => t.toastId !== toastId));
+      }, 9000);
+    },
+    [currentUser, playNotificationSound]
+  );
+
+  const dismissToast = (toastId) => {
+    setReportToasts((prev) => prev.filter((t) => t.toastId !== toastId));
+  };
+
+  const openReportFromToast = (toast) => {
+    dismissToast(toast.toastId);
+    setActiveTab('comando');
+    setCmdReportsFolderOpen(true);
+    setCmdReportFilterStatus('PENDENTE');
+  };
+
   useEffect(() => {
     const timer = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(timer);
@@ -257,13 +343,37 @@ export default function App() {
         if (dutyRes.data) setDutyLogs(dutyRes.data);
         if (citRes.data) setCitizens(citRes.data);
         if (vehRes.data) setVehicles(vehRes.data);
-        if (repRes.data) setReports(repRes.data);
+        if (repRes.data) {
+          repRes.data.forEach((r) => notifiedReportIdsRef.current.add(r.id));
+          setReports(repRes.data);
+        }
         if (annRes.data) setAnnouncements(annRes.data);
       } catch (err) {
         console.error('Erro ao sincronizar com Supabase:', err);
       }
     })();
-  }, []);
+
+    const channel = supabase
+      .channel('pm_reports_realtime_alerts')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'pm_reports' },
+        (payload) => {
+          const inserted = payload.new;
+          if (!inserted) return;
+          setReports((prev) => {
+            if (prev.some((r) => r.id === inserted.id)) return prev;
+            return [inserted, ...prev];
+          });
+          triggerReportNotification(inserted);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [triggerReportNotification]);
 
   const activeShift = useMemo(() => {
     if (!currentUser) return null;
@@ -278,14 +388,6 @@ export default function App() {
     () => dutyLogs.filter((d) => d.status === 'EM_SERVICO'),
     [dutyLogs]
   );
-
-  const reportStats = useMemo(() => {
-    const total = reports.length;
-    const pendentes = reports.filter((r) => (r.review_status || 'PENDENTE') === 'PENDENTE').length;
-    const aprovados = reports.filter((r) => r.review_status === 'APROVADO').length;
-    const reprovados = reports.filter((r) => r.review_status === 'REPROVADO').length;
-    return { total, pendentes, aprovados, reprovados };
-  }, [reports]);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -463,6 +565,7 @@ export default function App() {
       created_at: new Date().toISOString()
     };
     const localItem = { id: crypto.randomUUID(), ...payload };
+    notifiedReportIdsRef.current.add(localItem.id);
     setReports((prev) => [localItem, ...prev]);
     setNewReport({
       report_type: 'OCORRENCIA',
@@ -479,13 +582,38 @@ export default function App() {
     if (isSupabaseConfigured && supabase) {
       const { id, ...dbPayload } = localItem;
       const { data } = await supabase.from('pm_reports').insert([dbPayload]).select().single();
-      if (data) setReports((prev) => prev.map((r) => (r.id === localItem.id ? data : r)));
+      if (data) {
+        notifiedReportIdsRef.current.add(data.id);
+        setReports((prev) => prev.map((r) => (r.id === localItem.id ? data : r)));
+      }
+    }
+
+    if (isHighRank) {
+      const toastId = `${localItem.id}-${Date.now()}`;
+      setReportToasts((prev) => [
+        {
+          toastId,
+          reportId: localItem.id,
+          author_nick: localItem.author_nick,
+          author_rank: localItem.author_rank,
+          location: localItem.location || 'Local não informado',
+          incident_code: localItem.incident_code || 'Código 1',
+          outcome: localItem.outcome || 'Registrado',
+          created_at: localItem.created_at
+        },
+        ...prev
+      ].slice(0, 4));
+      playNotificationSound();
+      setTimeout(() => {
+        setReportToasts((prev) => prev.filter((t) => t.toastId !== toastId));
+      }, 9000);
     }
   };
 
-  const handleReviewReport = async (report, decision) => {
+  const handleReviewReport = async (report, decision, customNotes) => {
     if (!isHighRank) return;
-    const notes = (reviewNotesMap[report.id] || '').trim();
+    const rawNote = customNotes !== undefined ? customNotes : reviewNotesMap[report.id];
+    const notes = (rawNote || '').trim();
     const reviewedAt = new Date().toISOString();
 
     const updatedFields = {
@@ -510,27 +638,22 @@ export default function App() {
   };
 
   const handleDeleteReport = async (report) => {
-    const canDelete =
-      isHighRank ||
-      repAuthorMatches(report, currentUser);
-    if (!canDelete) return;
+    const isAuthor =
+      currentUser &&
+      report.author_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase();
+    if (!isHighRank && !isAuthor) return;
+
+    const confirmed = window.confirm(
+      `Apagar permanentemente o relatório de @${report.author_nick} em "${report.location}"?`
+    );
+    if (!confirmed) return;
 
     setReports((prev) => prev.filter((r) => r.id !== report.id));
-    setReviewNotesMap((prev) => {
-      const copy = { ...prev };
-      delete copy[report.id];
-      return copy;
-    });
 
     if (isSupabaseConfigured && supabase) {
       await supabase.from('pm_reports').delete().eq('id', report.id);
     }
   };
-
-  function repAuthorMatches(rep, user) {
-    if (!rep || !user) return false;
-    return (rep.author_nick || '').toLowerCase() === (user.roblox_nick || '').toLowerCase();
-  }
 
   const copyDiscordFormat = (text, id) => {
     navigator.clipboard.writeText(text);
@@ -697,110 +820,10 @@ export default function App() {
     };
   }, [selectedArticles]);
 
-  const renderReportCard = (rep) => {
-    const status = rep.review_status || 'PENDENTE';
-    const canDelete = isHighRank || repAuthorMatches(rep, currentUser);
-
-    return (
-      <div key={rep.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold">
-              {rep.incident_code}
-            </span>
-            <span
-              className={`px-2.5 py-0.5 rounded text-xs font-bold border ${
-                status === 'APROVADO'
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                  : status === 'REPROVADO'
-                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                  : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-              }`}
-            >
-              {status}
-            </span>
-            <span className="font-bold text-white text-sm">{rep.location}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => copyDiscordFormat(formatReportForDiscord(rep), rep.id)}
-              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5"
-            >
-              {copiedId === rep.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copiedId === rep.id ? 'Copiado!' : 'Copiar p/ Discord'}
-            </button>
-
-            {canDelete && (
-              <button
-                type="button"
-                onClick={() => handleDeleteReport(rep)}
-                title="Apagar relatório"
-                className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-600/30 hover:text-rose-300 border border-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1 transition"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Apagar</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
-          {rep.description}
-        </p>
-
-        <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-400">
-          <span>Responsável: <strong className="text-slate-200">@{rep.author_nick}</strong> ({rep.author_rank})</span>
-          <span>Envolvidos: <strong className="text-slate-200">{rep.involved_citizens || 'N/A'}</strong></span>
-          <span>Resultado: <strong className="text-emerald-400">{rep.outcome}</strong></span>
-          <span className="font-mono">{formatDateTime(rep.created_at)}</span>
-        </div>
-
-        {rep.reviewed_by && (
-          <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs space-y-1">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-bold text-slate-200">
-                Avaliação do Comando: @{rep.reviewed_by} ({rep.reviewer_rank})
-              </span>
-              <span className="text-[10px] font-mono text-slate-500">
-                {formatDateTime(rep.reviewed_at)}
-              </span>
-            </div>
-            <p className="text-slate-300">{rep.review_notes}</p>
-          </div>
-        )}
-
-        {isHighRank && (
-          <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row gap-2">
-            <input
-              type="text"
-              placeholder="Parecer do Comando / observação (opcional)..."
-              value={reviewNotesMap[rep.id] ?? rep.review_notes ?? ''}
-              onChange={(e) => setReviewNotesMap((prev) => ({ ...prev, [rep.id]: e.target.value }))}
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
-            />
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => handleReviewReport(rep, 'APROVADO')}
-                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
-              >
-                Aprovar
-              </button>
-              <button
-                type="button"
-                onClick={() => handleReviewReport(rep, 'REPROVADO')}
-                className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold"
-              >
-                Reprovar
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
+  const pendingReportsCount = useMemo(
+    () => reports.filter((r) => (r.review_status || 'PENDENTE') === 'PENDENTE').length,
+    [reports]
+  );
 
   if (!currentUser) {
     return (
@@ -1011,6 +1034,26 @@ export default function App() {
               </div>
             )}
 
+            {isHighRank && (
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !soundEnabled;
+                  setSoundEnabled(next);
+                  if (next) playNotificationSound();
+                }}
+                title={soundEnabled ? 'Som de notificação ligado' : 'Som de notificação mudo'}
+                className={`p-2 rounded-xl border text-xs font-semibold transition flex items-center gap-1 ${
+                  soundEnabled
+                    ? 'bg-amber-500/15 border-amber-500/35 text-amber-300 hover:bg-amber-500/25'
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Volume2 className="w-4 h-4" />
+                <span className="hidden md:inline">{soundEnabled ? 'Som ON' : 'Mudo'}</span>
+              </button>
+            )}
+
             <button
               onClick={handleLogout}
               title="Sair do Terminal"
@@ -1034,6 +1077,11 @@ export default function App() {
             >
               <Award className="w-4 h-4" />
               Alto Comando & Ponto ({activeShiftsAll.length} ativos)
+              {isHighRank && pendingReportsCount > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-rose-500/25 text-rose-200 border border-rose-500/40">
+                  {pendingReportsCount} rel.
+                </span>
+              )}
             </button>
           )}
 
@@ -1141,82 +1189,198 @@ export default function App() {
             </div>
 
             {isHighRank && (
-              <div className="bg-slate-900 border border-amber-500/30 rounded-2xl overflow-hidden">
+              <div className="bg-slate-900 border border-amber-500/35 rounded-2xl overflow-hidden">
                 <button
                   type="button"
-                  onClick={() => setCommandFolderOpen((prev) => !prev)}
+                  onClick={() => setCmdReportsFolderOpen((prev) => !prev)}
                   className="w-full p-5 flex flex-wrap items-center justify-between gap-3 text-left hover:bg-slate-800/40 transition"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-300">
-                      <FolderLock className="w-5 h-5" />
+                  <div className="flex items-start gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                      {cmdReportsFolderOpen ? (
+                        <FolderOpen className="w-5 h-5 text-amber-300" />
+                      ) : (
+                        <Folder className="w-5 h-5 text-amber-300" />
+                      )}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-extrabold text-amber-300">
-                          PASTA RESERVADA DO COMANDO — REGISTROS E RELATÓRIOS
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-extrabold text-white tracking-tight">
+                          PASTA DE RELATÓRIOS — APROVAÇÃO E REPROVAÇÃO DO COMANDO
                         </span>
-                        {commandFolderOpen ? (
-                          <ChevronDown className="w-4 h-4 text-amber-300" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-amber-300" />
-                        )}
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          {cmdReportsFolderOpen ? 'PASTA ABERTA' : 'PASTA RECOLHIDA'}
+                        </span>
                       </div>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Área recolhida para manter o painel limpo. Abra para revisar, <strong>aprovar</strong>, <strong>reprovar</strong> ou <strong>apagar</strong> relatórios enviados pelo efetivo.
+                        Arquivo reservado de ocorrências enviadas pelos policiais. Abra para aprovar, reprovar, emitir parecer ou apagar registros antigos.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
-                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                      {reportStats.pendentes} pendentes
-                    </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                      {reportStats.aprovados} aprovados
-                    </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30">
-                      {reportStats.reprovados} reprovados
-                    </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-950 text-slate-300 border border-slate-800">
-                      {commandFolderOpen ? 'Fechar pasta' : 'Abrir pasta'}
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono font-bold">
+                        {pendingReportsCount} pendentes
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-slate-950 text-slate-300 border border-slate-800 font-mono">
+                        {reports.length} total
+                      </span>
+                    </div>
+                    <span className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                      {cmdReportsFolderOpen ? (
+                        <>
+                          Ocultar Pasta <ChevronUp className="w-4 h-4" />
+                        </>
+                      ) : (
+                        <>
+                          Abrir Pasta <ChevronDown className="w-4 h-4" />
+                        </>
+                      )}
                     </span>
                   </div>
                 </button>
 
-                {commandFolderOpen && (
-                  <div className="p-5 pt-2 border-t border-slate-800/80 space-y-4 bg-slate-950/40">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <span className="text-xs text-slate-300">
-                        Use o filtro abaixo para focar nos relatórios pendentes ou já avaliados:
+                {cmdReportsFolderOpen && (
+                  <div className="px-5 pb-5 pt-2 border-t border-slate-800/80 space-y-4 bg-slate-950/40">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs text-slate-400">
+                        Use os filtros abaixo para separar o que precisa de análise ou limpar registros já encerrados.
                       </span>
                       <select
-                        value={reportFilterStatus}
-                        onChange={(e) => setReportFilterStatus(e.target.value)}
+                        value={cmdReportFilterStatus}
+                        onChange={(e) => setCmdReportFilterStatus(e.target.value)}
                         className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
                       >
-                        <option value="TODOS">Todos os Status ({reportStats.total})</option>
-                        <option value="PENDENTE">Pendentes ({reportStats.pendentes})</option>
-                        <option value="APROVADO">Aprovados ({reportStats.aprovados})</option>
-                        <option value="REPROVADO">Reprovados ({reportStats.reprovados})</option>
+                        <option value="PENDENTE">Somente Pendentes</option>
+                        <option value="TODOS">Todos os Relatórios</option>
+                        <option value="APROVADO">Aprovados</option>
+                        <option value="REPROVADO">Reprovados</option>
                       </select>
                     </div>
 
                     {reports.filter((rep) => {
                       const status = rep.review_status || 'PENDENTE';
-                      return reportFilterStatus === 'TODOS' || status === reportFilterStatus;
+                      return cmdReportFilterStatus === 'TODOS' || status === cmdReportFilterStatus;
                     }).length === 0 ? (
                       <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs text-slate-400">
-                        Nenhum relatório encontrado neste filtro.
+                        Nenhum relatório encontrado neste filtro dentro da pasta.
                       </div>
                     ) : (
                       <div className="space-y-3">
                         {reports
                           .filter((rep) => {
                             const status = rep.review_status || 'PENDENTE';
-                            return reportFilterStatus === 'TODOS' || status === reportFilterStatus;
+                            return cmdReportFilterStatus === 'TODOS' || status === cmdReportFilterStatus;
                           })
-                          .map(renderReportCard)}
+                          .map((rep) => {
+                            const status = rep.review_status || 'PENDENTE';
+                            return (
+                              <div
+                                key={rep.id}
+                                className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3"
+                              >
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 text-[11px] font-bold">
+                                      {rep.incident_code}
+                                    </span>
+                                    <span
+                                      className={`px-2 py-0.5 rounded text-[11px] font-bold border ${
+                                        status === 'APROVADO'
+                                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                          : status === 'REPROVADO'
+                                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                          : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                      }`}
+                                    >
+                                      {status}
+                                    </span>
+                                    <span className="font-bold text-white text-xs sm:text-sm">
+                                      {rep.location}
+                                    </span>
+                                    <span className="text-[11px] text-slate-400">
+                                      • Por <strong className="text-slate-200">@{rep.author_nick}</strong> ({rep.author_rank})
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => copyDiscordFormat(formatReportForDiscord(rep), `cmd-${rep.id}`)}
+                                      className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1"
+                                    >
+                                      {copiedId === `cmd-${rep.id}` ? (
+                                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                      ) : (
+                                        <Copy className="w-3.5 h-3.5" />
+                                      )}
+                                      Discord
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteReport(rep)}
+                                      className="px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center gap-1"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      Apagar
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                  {rep.description}
+                                </p>
+
+                                <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-400">
+                                  <span>Viatura: <strong className="text-slate-200">{rep.vtr_prefix}</strong></span>
+                                  <span>Envolvidos: <strong className="text-slate-200">{rep.involved_citizens || 'N/A'}</strong></span>
+                                  <span>Resultado: <strong className="text-emerald-400">{rep.outcome}</strong></span>
+                                  <span className="font-mono">{formatDateTime(rep.created_at)}</span>
+                                </div>
+
+                                <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Parecer do Comando / motivo da aprovação ou reprovação..."
+                                    value={cmdReviewNotesMap[rep.id] ?? rep.review_notes ?? ''}
+                                    onChange={(e) =>
+                                      setCmdReviewNotesMap((prev) => ({ ...prev, [rep.id]: e.target.value }))
+                                    }
+                                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                                  />
+                                  <div className="flex gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleReviewReport(
+                                          rep,
+                                          'APROVADO',
+                                          cmdReviewNotesMap[rep.id] ?? rep.review_notes
+                                        )
+                                      }
+                                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
+                                    >
+                                      Aprovar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleReviewReport(
+                                          rep,
+                                          'REPROVADO',
+                                          cmdReviewNotesMap[rep.id] ?? rep.review_notes
+                                        )
+                                      }
+                                      className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold"
+                                    >
+                                      Reprovar
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                       </div>
                     )}
                   </div>
@@ -2081,8 +2245,8 @@ export default function App() {
                 <div className="text-xs text-slate-300">
                   {isHighRank ? (
                     <>
-                      <strong className="text-amber-400">Visão de Patente Alta:</strong> Você visualiza todos os relatórios, pode{' '}
-                      <strong className="text-white">Aprovar</strong> ou <strong className="text-white">Reprovar</strong> e apagar registros antigos.
+                      <strong className="text-amber-400">Visão de Patente Alta:</strong> Você visualiza todos os relatórios e pode{' '}
+                      <strong className="text-white">Aprovar</strong>, <strong className="text-white">Reprovar</strong> ou <strong className="text-white">Apagar</strong>.
                     </>
                   ) : (
                     <>
@@ -2104,13 +2268,120 @@ export default function App() {
 
               {reports
                 .filter((rep) => {
-                  const canView = isHighRank || repAuthorMatches(rep, currentUser);
+                  const canView =
+                    isHighRank ||
+                    rep.author_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase();
                   if (!canView) return false;
 
                   const status = rep.review_status || 'PENDENTE';
                   return reportFilterStatus === 'TODOS' || status === reportFilterStatus;
                 })
-                .map(renderReportCard)}
+                .map((rep) => {
+                  const status = rep.review_status || 'PENDENTE';
+                  const isAuthor =
+                    rep.author_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase();
+                  const canDelete = isHighRank || isAuthor;
+
+                  return (
+                    <div key={rep.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold">
+                            {rep.incident_code}
+                          </span>
+                          <span
+                            className={`px-2.5 py-0.5 rounded text-xs font-bold border ${
+                              status === 'APROVADO'
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                : status === 'REPROVADO'
+                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                            }`}
+                          >
+                            {status}
+                          </span>
+                          <span className="font-bold text-white text-sm">{rep.location}</span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => copyDiscordFormat(formatReportForDiscord(rep), rep.id)}
+                            className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5"
+                          >
+                            {copiedId === rep.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            {copiedId === rep.id ? 'Copiado!' : 'Copiar p/ Discord'}
+                          </button>
+
+                          {canDelete && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteReport(rep)}
+                              title="Apagar relatório"
+                              className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center gap-1"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Apagar
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        {rep.description}
+                      </p>
+
+                      <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-400">
+                        <span>Responsável: <strong className="text-slate-200">@{rep.author_nick}</strong> ({rep.author_rank})</span>
+                        <span>Envolvidos: <strong className="text-slate-200">{rep.involved_citizens || 'N/A'}</strong></span>
+                        <span>Resultado: <strong className="text-emerald-400">{rep.outcome}</strong></span>
+                        <span className="font-mono">{formatDateTime(rep.created_at)}</span>
+                      </div>
+
+                      {rep.reviewed_by && (
+                        <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs space-y-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-bold text-slate-200">
+                              Avaliação do Comando: @{rep.reviewed_by} ({rep.reviewer_rank})
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-500">
+                              {formatDateTime(rep.reviewed_at)}
+                            </span>
+                          </div>
+                          <p className="text-slate-300">{rep.review_notes}</p>
+                        </div>
+                      )}
+
+                      {isHighRank && (
+                        <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="text"
+                            placeholder="Parecer do Comando / observação (opcional)..."
+                            value={reviewNotesMap[rep.id] ?? rep.review_notes ?? ''}
+                            onChange={(e) => setReviewNotesMap((prev) => ({ ...prev, [rep.id]: e.target.value }))}
+                            className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleReviewReport(rep, 'APROVADO')}
+                              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
+                            >
+                              Aprovar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleReviewReport(rep, 'REPROVADO')}
+                              className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold"
+                            >
+                              Reprovar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           </div>
         )}
@@ -2267,6 +2538,68 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {isHighRank && reportToasts.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-50 w-full max-w-sm space-y-2.5 pointer-events-none px-4 sm:px-0">
+          {reportToasts.map((toast) => (
+            <div
+              key={toast.toastId}
+              className="pointer-events-auto bg-slate-900/95 border border-amber-500/45 rounded-2xl p-4 shadow-2xl shadow-black/70 backdrop-blur-md space-y-2.5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/35 flex items-center justify-center shrink-0">
+                    <Bell className="w-4 h-4 text-amber-300 animate-bounce" />
+                  </span>
+                  <div>
+                    <div className="text-[11px] font-mono uppercase font-bold text-amber-300">
+                      Novo Relatório para Análise
+                    </div>
+                    <div className="text-xs font-bold text-white">
+                      @{toast.author_nick} • {toast.incident_code}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => dismissToast(toast.toastId)}
+                  aria-label="Fechar notificação"
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="text-xs text-slate-300 bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 space-y-1">
+                <div>
+                  Local: <strong className="text-white">{toast.location}</strong>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <span>Resultado: <strong className="text-emerald-400">{toast.outcome}</strong></span>
+                  <span className="font-mono">{formatDateTime(toast.created_at)}</span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => dismissToast(toast.toastId)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                >
+                  Ignorar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openReportFromToast(toast)}
+                  className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold"
+                >
+                  Abrir Pasta
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
