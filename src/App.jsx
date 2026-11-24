@@ -188,11 +188,123 @@ export default function App() {
   const [globalSearch, setGlobalSearch] = useState('');
   const [copiedId, setCopiedId] = useState(null);
 
-  // Notificações no canto inferior direito para patente alta
   const [reportToasts, setReportToasts] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const notifiedReportIdsRef = useRef(new Set(INITIAL_REPORTS.map((r) => r.id)));
   const audioCtxRef = useRef(null);
+  const currentUserRef = useRef(currentUser);
+  const soundEnabledRef = useRef(soundEnabled);
+
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
+
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
+
+  const unlockAudioContext = useCallback(() => {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return null;
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContextClass();
+      }
+      if (audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume().catch(() => {});
+      }
+      return audioCtxRef.current;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    const onFirstInteraction = () => {
+      unlockAudioContext();
+    };
+    window.addEventListener('pointerdown', onFirstInteraction, { passive: true });
+    window.addEventListener('keydown', onFirstInteraction, { passive: true });
+    return () => {
+      window.removeEventListener('pointerdown', onFirstInteraction);
+      window.removeEventListener('keydown', onFirstInteraction);
+    };
+  }, [unlockAudioContext]);
+
+  const playNotificationSound = useCallback(async () => {
+    if (!soundEnabledRef.current) return;
+    const ctx = unlockAudioContext();
+    if (!ctx) return;
+
+    try {
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+
+      const now = ctx.currentTime;
+      const notes = [932.33, 1244.51];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+
+        gain.gain.setValueAtTime(0.001, now + idx * 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.22, now + idx * 0.15 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.15 + 0.22);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now + idx * 0.15);
+        osc.stop(now + idx * 0.15 + 0.24);
+      });
+    } catch {
+      // Ignora se bloqueado pela política de mídia do navegador
+    }
+  }, [unlockAudioContext]);
+
+  const triggerReportNotification = useCallback(
+    (rep) => {
+      if (!rep || !rep.id) return;
+      if (notifiedReportIdsRef.current.has(rep.id)) return;
+      notifiedReportIdsRef.current.add(rep.id);
+
+      const user = currentUserRef.current;
+      if (!user || user.rank_level < 4) return;
+
+      const toastId = `${rep.id}-${Date.now()}`;
+      const newToast = {
+        toastId,
+        reportId: rep.id,
+        author_nick: rep.author_nick,
+        author_rank: rep.author_rank,
+        location: rep.location || 'Local não informado',
+        incident_code: rep.incident_code || 'Código 1',
+        outcome: rep.outcome || 'Registrado',
+        created_at: rep.created_at || new Date().toISOString()
+      };
+
+      setReportToasts((prev) => [newToast, ...prev].slice(0, 4));
+      playNotificationSound();
+
+      setTimeout(() => {
+        setReportToasts((prev) => prev.filter((t) => t.toastId !== toastId));
+      }, 10000);
+    },
+    [playNotificationSound]
+  );
+
+  const dismissToast = (toastId) => {
+    setReportToasts((prev) => prev.filter((t) => t.toastId !== toastId));
+  };
+
+  const openReportFromToast = (toast) => {
+    dismissToast(toast.toastId);
+    setActiveTab('comando');
+    setCmdReportsFolderOpen(true);
+    setCmdReportFilterStatus('PENDENTE');
+  };
 
   const [vtrPrefix, setVtrPrefix] = useState('Caracterizada');
   const [patrolArea, setPatrolArea] = useState('GV e Horton');
@@ -245,109 +357,47 @@ export default function App() {
   const isTopCommand = currentUser && currentUser.rank_level >= 4;
   const isHighRank = currentUser && currentUser.rank_level >= 4;
 
-  const playNotificationSound = useCallback(() => {
-    if (!soundEnabled) return;
-    try {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return;
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new AudioContextClass();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-
-      const now = ctx.currentTime;
-      const notes = [880, 1174.66];
-      notes.forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now + idx * 0.14);
-
-        gain.gain.setValueAtTime(0.001, now + idx * 0.14);
-        gain.gain.exponentialRampToValueAtTime(0.14, now + idx * 0.14 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.14 + 0.18);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(now + idx * 0.14);
-        osc.stop(now + idx * 0.14 + 0.2);
-      });
-    } catch {
-      // Navegador pode bloquear áudio antes de interação do usuário
-    }
-  }, [soundEnabled]);
-
-  const triggerReportNotification = useCallback(
-    (rep) => {
-      if (!rep || !rep.id) return;
-      if (notifiedReportIdsRef.current.has(rep.id)) return;
-      notifiedReportIdsRef.current.add(rep.id);
-
-      if (!currentUser || currentUser.rank_level < 4) return;
-
-      const toastId = `${rep.id}-${Date.now()}`;
-      const newToast = {
-        toastId,
-        reportId: rep.id,
-        author_nick: rep.author_nick,
-        author_rank: rep.author_rank,
-        location: rep.location || 'Local não informado',
-        incident_code: rep.incident_code || 'Código 1',
-        outcome: rep.outcome || 'Registrado',
-        created_at: rep.created_at || new Date().toISOString()
-      };
-
-      setReportToasts((prev) => [newToast, ...prev].slice(0, 4));
-      playNotificationSound();
-
-      setTimeout(() => {
-        setReportToasts((prev) => prev.filter((t) => t.toastId !== toastId));
-      }, 9000);
-    },
-    [currentUser, playNotificationSound]
-  );
-
-  const dismissToast = (toastId) => {
-    setReportToasts((prev) => prev.filter((t) => t.toastId !== toastId));
-  };
-
-  const openReportFromToast = (toast) => {
-    dismissToast(toast.toastId);
-    setActiveTab('comando');
-    setCmdReportsFolderOpen(true);
-    setCmdReportFilterStatus('PENDENTE');
-  };
-
   useEffect(() => {
     const timer = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  const syncReportsLive = useCallback(async (shouldNotifyNew = false) => {
+    if (!isSupabaseConfigured || !supabase) return;
+    const { data, error } = await supabase
+      .from('pm_reports')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error || !data) return;
+
+    if (shouldNotifyNew) {
+      const unseen = data.filter((r) => !notifiedReportIdsRef.current.has(r.id));
+      unseen.forEach((r) => triggerReportNotification(r));
+    } else {
+      data.forEach((r) => notifiedReportIdsRef.current.add(r.id));
+    }
+
+    setReports(data);
+  }, [triggerReportNotification]);
+
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
     (async () => {
       try {
-        const [offRes, dutyRes, citRes, vehRes, repRes, annRes] = await Promise.all([
+        const [offRes, dutyRes, citRes, vehRes, annRes] = await Promise.all([
           supabase.from('pm_officers').select('*').order('rank_level', { ascending: false }),
           supabase.from('pm_duty_logs').select('*').order('started_at', { ascending: false }),
           supabase.from('pm_citizens').select('*').order('created_at', { ascending: false }),
           supabase.from('pm_vehicles').select('*').order('created_at', { ascending: false }),
-          supabase.from('pm_reports').select('*').order('created_at', { ascending: false }),
           supabase.from('pm_announcements').select('*').order('created_at', { ascending: false }),
         ]);
         if (offRes.data && offRes.data.length > 0) setOfficers(offRes.data);
         if (dutyRes.data) setDutyLogs(dutyRes.data);
         if (citRes.data) setCitizens(citRes.data);
         if (vehRes.data) setVehicles(vehRes.data);
-        if (repRes.data) {
-          repRes.data.forEach((r) => notifiedReportIdsRef.current.add(r.id));
-          setReports(repRes.data);
-        }
         if (annRes.data) setAnnouncements(annRes.data);
+        await syncReportsLive(false);
       } catch (err) {
         console.error('Erro ao sincronizar com Supabase:', err);
       }
@@ -357,23 +407,37 @@ export default function App() {
       .channel('pm_reports_realtime_alerts')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'pm_reports' },
+        { event: '*', schema: 'public', table: 'pm_reports' },
         (payload) => {
-          const inserted = payload.new;
-          if (!inserted) return;
-          setReports((prev) => {
-            if (prev.some((r) => r.id === inserted.id)) return prev;
-            return [inserted, ...prev];
-          });
-          triggerReportNotification(inserted);
+          if (payload.eventType === 'INSERT' && payload.new) {
+            const inserted = payload.new;
+            setReports((prev) => {
+              if (prev.some((r) => r.id === inserted.id)) return prev;
+              return [inserted, ...prev];
+            });
+            triggerReportNotification(inserted);
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            setReports((prev) =>
+              prev.map((r) => (r.id === payload.new.id ? payload.new : r))
+            );
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            setReports((prev) => prev.filter((r) => r.id !== payload.old.id));
+          }
         }
       )
       .subscribe();
 
+    const pollInterval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        syncReportsLive(true);
+      }
+    }, 3500);
+
     return () => {
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
-  }, [triggerReportNotification]);
+  }, [syncReportsLive, triggerReportNotification]);
 
   const activeShift = useMemo(() => {
     if (!currentUser) return null;
@@ -391,6 +455,7 @@ export default function App() {
 
   const handleLogin = (e) => {
     e.preventDefault();
+    unlockAudioContext();
     setLoginError('');
     const term = loginIdentifier.trim().toLowerCase();
     const found = officers.find(
@@ -552,6 +617,7 @@ export default function App() {
 
   const handleAddReport = async (e) => {
     e.preventDefault();
+    unlockAudioContext();
     if (!newReport.description.trim()) return;
     const payload = {
       ...newReport,
@@ -579,34 +645,36 @@ export default function App() {
       outcome: 'Preso'
     });
 
+    let finalReport = localItem;
     if (isSupabaseConfigured && supabase) {
       const { id, ...dbPayload } = localItem;
       const { data } = await supabase.from('pm_reports').insert([dbPayload]).select().single();
       if (data) {
         notifiedReportIdsRef.current.add(data.id);
+        finalReport = data;
         setReports((prev) => prev.map((r) => (r.id === localItem.id ? data : r)));
       }
     }
 
     if (isHighRank) {
-      const toastId = `${localItem.id}-${Date.now()}`;
+      const toastId = `${finalReport.id}-${Date.now()}`;
       setReportToasts((prev) => [
         {
           toastId,
-          reportId: localItem.id,
-          author_nick: localItem.author_nick,
-          author_rank: localItem.author_rank,
-          location: localItem.location || 'Local não informado',
-          incident_code: localItem.incident_code || 'Código 1',
-          outcome: localItem.outcome || 'Registrado',
-          created_at: localItem.created_at
+          reportId: finalReport.id,
+          author_nick: finalReport.author_nick,
+          author_rank: finalReport.author_rank,
+          location: finalReport.location || 'Local não informado',
+          incident_code: finalReport.incident_code || 'Código 1',
+          outcome: finalReport.outcome || 'Registrado',
+          created_at: finalReport.created_at
         },
         ...prev
       ].slice(0, 4));
-      playNotificationSound();
+      await playNotificationSound();
       setTimeout(() => {
         setReportToasts((prev) => prev.filter((t) => t.toastId !== toastId));
-      }, 9000);
+      }, 10000);
     }
   };
 
