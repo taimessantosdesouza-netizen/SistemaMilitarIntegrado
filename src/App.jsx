@@ -1354,3 +1354,624 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {activeTab === 'cidadaos' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <h2 className="text-base font-bold text-white flex items-center gap-2">
+                    <Users className="w-5 h-5 text-blue-400" />
+                    INFOPEN — Registro Geral de Cidadãos de Pantanória
+                  </h2>
+                  <input
+                    type="text"
+                    placeholder="Filtrar por Passaporte, Nome ou Nick..."
+                    value={citizenSearch}
+                    onChange={(e) => setCitizenSearch(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white w-full sm:w-64"
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  {filteredCitizens.map((cit) => (
+                    <div key={cit.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300">
+                              {cit.passport}
+                            </span>
+                            <h3 className="font-bold text-white text-sm">{cit.rp_name}</h3>
+                            <span className="text-xs text-slate-400">(@{cit.roblox_nick})</span>
+                          </div>
+                          <div className="text-xs text-slate-400 mt-1 flex flex-wrap gap-3">
+                            <span>Tel: <strong className="text-slate-200">{cit.phone}</strong></span>
+                            <span>CNH: <strong className="text-slate-200">{cit.cnh_status}</strong></span>
+                            <span>Porte de Arma: <strong className={cit.gun_license ? 'text-emerald-400' : 'text-slate-500'}>{cit.gun_license ? 'Sim' : 'Não'}</strong></span>
+                          </div>
+                        </div>
+
+                        <select
+                          value={cit.wanted_status}
+                          onChange={(e) => handleUpdateCitizenStatus(cit, e.target.value)}
+                          className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${
+                            cit.wanted_status === 'Procurado' || cit.wanted_status === 'Foragido'
+                              ? 'bg-red-500/20 text-red-300 border-red-500/40'
+                              : cit.wanted_status === 'Preso'
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                              : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                          }`}
+                        >
+                          <option value="Limpo">Limpo</option>
+                          <option value="Procurado">PROCURADO</option>
+                          <option value="Preso">PRESO</option>
+                          <option value="Foragido">FORAGIDO</option>
+                        </select>
+                      </div>
+
+                      <div className="border-t border-slate-800/80 pt-2.5">
+                        <div className="text-[11px] font-semibold uppercase text-slate-400 mb-1.5">
+                          Antecedentes / Passagens ({(cit.criminal_records || []).length})
+                        </div>
+                        {(cit.criminal_records || []).length === 0 ? (
+                          <p className="text-xs text-slate-500 italic">Nada consta no prontuário.</p>
+                        ) : (
+                          <ul className="space-y-1 text-xs">
+                            {cit.criminal_records.map((rec, idx) => (
+                              <li key={idx} className="bg-slate-900 px-2.5 py-1.5 rounded text-slate-300 flex justify-between gap-2">
+                                <span>• {rec.crime}</span>
+                                <span className="text-[10px] font-mono text-slate-500 shrink-0">{rec.date} ({rec.officer})</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        <div className="flex gap-2 mt-2.5">
+                          <input
+                            type="text"
+                            placeholder="Averbar nova infração / ocorrência no prontuário..."
+                            value={crimeInput[cit.id] || ''}
+                            onChange={(e) => setCrimeInput({ ...crimeInput, [cit.id]: e.target.value })}
+                            className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleAddCrimeRecord(cit)}
+                            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
+                          >
+                            Averbar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-fit">
+              <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
+                <Plus className="w-5 h-5 text-blue-400" />
+                Cadastrar Cidadão no INFOPEN
+              </h3>
+              <form onSubmit={handleAddCitizen} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-400 mb-1">Passaporte / ID</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: PTN-1004"
+                    value={newCitizen.passport}
+                    onChange={(e) => setNewCitizen({ ...newCitizen, passport: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Nome Completo (RP)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Carlos Eduardo"
+                    value={newCitizen.rp_name}
+                    onChange={(e) => setNewCitizen({ ...newCitizen, rp_name: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Nick Roblox</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: carlos_rp"
+                    value={newCitizen.roblox_nick}
+                    onChange={(e) => setNewCitizen({ ...newCitizen, roblox_nick: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-slate-400 mb-1">Telefone</label>
+                    <input
+                      type="text"
+                      placeholder="555-0199"
+                      value={newCitizen.phone}
+                      onChange={(e) => setNewCitizen({ ...newCitizen, phone: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Situação CNH</label>
+                    <select
+                      value={newCitizen.cnh_status}
+                      onChange={(e) => setNewCitizen({ ...newCitizen, cnh_status: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
+                    >
+                      <option value="Válida">Válida</option>
+                      <option value="Suspensa">Suspensa</option>
+                      <option value="Sem CNH">Sem CNH</option>
+                    </select>
+                  </div>
+                </div>
+                <label className="flex items-center gap-2 text-slate-300 pt-1">
+                  <input
+                    type="checkbox"
+                    checked={newCitizen.gun_license}
+                    onChange={(e) => setNewCitizen({ ...newCitizen, gun_license: e.target.checked })}
+                  />
+                  Possui Porte Legal de Arma
+                </label>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition mt-2"
+                >
+                  Salvar Ficha no Banco de Dados
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'veiculos' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <Car className="w-5 h-5 text-blue-400" />
+                  RENAVAM — Consulta de Placas e Frota
+                </h2>
+                <input
+                  type="text"
+                  placeholder="Buscar por Placa, Modelo ou Proprietário..."
+                  value={vehicleSearch}
+                  onChange={(e) => setVehicleSearch(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white w-full sm:w-64"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredVehicles.map((v) => (
+                  <div key={v.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="bg-white text-slate-950 font-mono font-extrabold text-sm px-3 py-1 rounded border-t-4 border-blue-700 tracking-wider">
+                        {v.plate}
+                      </div>
+                      <select
+                        value={v.status}
+                        onChange={(e) => handleUpdateVehicleStatus(v, e.target.value)}
+                        className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
+                          v.status === 'Roubado/Furtado'
+                            ? 'bg-red-500/20 text-red-300 border-red-500/40'
+                            : v.status === 'Apreendido'
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                            : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                        }`}
+                      >
+                        <option value="Regular">Regular</option>
+                        <option value="Roubado/Furtado">ROUBADO / FURTADO</option>
+                        <option value="Apreendido">APREENDIDO</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <div className="font-bold text-white text-sm">{v.model}</div>
+                      <div className="text-xs text-slate-400">Cor: {v.color}</div>
+                    </div>
+
+                    <div className="text-xs bg-slate-900 p-2.5 rounded-lg border border-slate-800/80">
+                      <div className="text-slate-300">
+                        Proprietário: <strong>{v.owner_name}</strong> ({v.owner_passport})
+                      </div>
+                      {v.notes && <div className="text-slate-400 mt-1 text-[11px]">Obs: {v.notes}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-fit">
+              <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
+                <Plus className="w-5 h-5 text-blue-400" />
+                Emplacar / Registrar Veículo
+              </h3>
+              <form onSubmit={handleAddVehicle} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-400 mb-1">Placa</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: PTN-5B90"
+                    value={newVehicle.plate}
+                    onChange={(e) => setNewVehicle({ ...newVehicle, plate: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Modelo do Veículo</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Ford Crown Victoria"
+                    value={newVehicle.model}
+                    onChange={(e) => setNewVehicle({ ...newVehicle, model: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-slate-400 mb-1">Cor</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Preto"
+                      value={newVehicle.color}
+                      onChange={(e) => setNewVehicle({ ...newVehicle, color: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Passaporte Dono</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="PTN-1003"
+                      value={newVehicle.owner_passport}
+                      onChange={(e) => setNewVehicle({ ...newVehicle, owner_passport: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Nome do Proprietário</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Nome RP do dono"
+                    value={newVehicle.owner_name}
+                    onChange={(e) => setNewVehicle({ ...newVehicle, owner_name: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Observações</label>
+                  <input
+                    type="text"
+                    placeholder="Opcional..."
+                    value={newVehicle.notes}
+                    onChange={(e) => setNewVehicle({ ...newVehicle, notes: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition mt-2"
+                >
+                  Registrar no RENAVAM
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'relatorios' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-fit">
+              <h2 className="text-base font-bold text-white flex items-center gap-2 mb-4">
+                <FileText className="w-5 h-5 text-blue-400" />
+                Lavrar Relatório Pós-Ocorrência
+              </h2>
+              <form onSubmit={handleAddReport} className="space-y-3 text-xs">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-slate-400 mb-1">Código Ocorrência</label>
+                    <select
+                      value={newReport.incident_code}
+                      onChange={(e) => setNewReport({ ...newReport, incident_code: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
+                    >
+                      <option value="Código 1">Código 1 (Rotina)</option>
+                      <option value="Código 2">Código 2 (Urgência)</option>
+                      <option value="Código 3">Código 3 (Emergência / Fuga)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Viatura</label>
+                    <input
+                      type="text"
+                      value={newReport.vtr_prefix}
+                      onChange={(e) => setNewReport({ ...newReport, vtr_prefix: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Local da Ocorrência</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Túnel de Brookmere, GV..."
+                    value={newReport.location}
+                    onChange={(e) => setNewReport({ ...newReport, location: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Policiais Envolvidos</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: @Krustelles_22 @wyzontheradar"
+                    value={newReport.involved_officers}
+                    onChange={(e) => setNewReport({ ...newReport, involved_officers: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Suspeitos / Pessoas Envolvidas</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: nick (PTN-1001)"
+                    value={newReport.involved_citizens}
+                    onChange={(e) => setNewReport({ ...newReport, involved_citizens: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Descrição Resumida</label>
+                  <textarea
+                    rows={3}
+                    required
+                    placeholder="Relate o ocorrido com clareza..."
+                    value={newReport.description}
+                    onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-slate-400 mb-1">Providências</label>
+                    <input
+                      type="text"
+                      value={newReport.actions_taken}
+                      onChange={(e) => setNewReport({ ...newReport, actions_taken: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Resultado Final</label>
+                    <select
+                      value={newReport.outcome}
+                      onChange={(e) => setNewReport({ ...newReport, outcome: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
+                    >
+                      <option value="Preso">Preso</option>
+                      <option value="Advertido / Liberado">Advertido / Liberado</option>
+                      <option value="Veículo Apreendido">Veículo Apreendido</option>
+                      <option value="Foragido">Foragido</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition"
+                >
+                  Registrar Relatório no Sistema
+                </button>
+              </form>
+            </div>
+
+            <div className="lg:col-span-2 space-y-4">
+              {reports.map((rep) => (
+                <div key={rep.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold">
+                        {rep.incident_code}
+                      </span>
+                      <span className="font-bold text-white text-sm">{rep.location}</span>
+                    </div>
+                    <button
+                      onClick={() => copyDiscordFormat(formatReportForDiscord(rep), rep.id)}
+                      className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5"
+                    >
+                      {copiedId === rep.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copiedId === rep.id ? 'Copiado!' : 'Copiar p/ Discord'}
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    {rep.description}
+                  </p>
+
+                  <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-400">
+                    <span>Responsável: <strong className="text-slate-200">@{rep.author_nick}</strong> ({rep.author_rank})</span>
+                    <span>Envolvidos: <strong className="text-slate-200">{rep.involved_citizens || 'N/A'}</strong></span>
+                    <span>Resultado: <strong className="text-emerald-400">{rep.outcome}</strong></span>
+                    <span className="font-mono">{formatDateTime(rep.created_at)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'penal' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <h2 className="text-base font-bold text-white flex items-center gap-2 mb-4">
+                <Scale className="w-5 h-5 text-blue-400" />
+                Código Penal de Pantanória — Selecione as Infrações
+              </h2>
+              <div className="space-y-2.5">
+                {PENAL_ARTICLES.map((art) => {
+                  const checked = selectedArticles.includes(art.id);
+                  return (
+                    <label
+                      key={art.id}
+                      className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition ${
+                        checked
+                          ? 'bg-blue-600/15 border-blue-500 text-white'
+                          : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() =>
+                            setSelectedArticles((prev) =>
+                              prev.includes(art.id) ? prev.filter((x) => x !== art.id) : [...prev, art.id]
+                            )
+                          }
+                        />
+                        <div>
+                          <div className="text-xs font-bold">
+                            {art.code} — {art.name}
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            {art.bail ? 'Crime Afiançável' : 'Inafiançável'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right font-mono text-xs">
+                        <div className="font-bold text-amber-400">{art.months} meses</div>
+                        <div className="text-emerald-400">$ {art.fine.toLocaleString('pt-BR')}</div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-fit space-y-4">
+              <h3 className="text-base font-bold text-white">Sentença Calculada</h3>
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400">Pena Total:</span>
+                  <span className="font-mono font-extrabold text-amber-400 text-base">{penalTotals.months} meses</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400">Multa Total:</span>
+                  <span className="font-mono font-extrabold text-emerald-400 text-base">
+                    $ {penalTotals.fine.toLocaleString('pt-BR')}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400">Direito a Fiança:</span>
+                  <span className={`font-bold ${penalTotals.bailAllowed ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {selectedArticles.length === 0 ? '—' : penalTotals.bailAllowed ? 'SIM' : 'NÃO (INAFIANÇÁVEL)'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedArticles([])}
+                className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
+              >
+                Limpar Seleção
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'hierarquia' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <h2 className="text-base font-bold text-white flex items-center gap-2 mb-2">
+                <Shield className="w-5 h-5 text-blue-400" />
+                Hierarquia Oficial — Polícia Militar de Pantanória
+              </h2>
+              {RANKS.map((r) => (
+                <div key={r.level} className="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-white">
+                      {6 - r.level}. {r.name}
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/15 text-blue-300">
+                      Nível {r.level}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">{r.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-4">
+              {isHighCommand && (
+                <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-5">
+                  <h3 className="text-sm font-bold text-amber-300 mb-3">
+                    Publicar Comunicado ou Parametrização (Alto Comando)
+                  </h3>
+                  <form onSubmit={handleAddAnnouncement} className="space-y-2.5 text-xs">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Título (ex: PARAMETRIZAÇÃO — RECRUTA...)"
+                      value={newAnnouncement.title}
+                      onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                    />
+                    <textarea
+                      rows={3}
+                      required
+                      placeholder="Texto oficial do comunicado..."
+                      value={newAnnouncement.content}
+                      onChange={(e) => setNewAnnouncement({ ...newAnnouncement, content: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white"
+                    />
+                    <button
+                      type="submit"
+                      className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl"
+                    >
+                      Publicar no Mural Oficial
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <Megaphone className="w-5 h-5 text-blue-400" />
+                  Mural de Comunicados & Parametrizações
+                </h2>
+                {announcements.map((a) => (
+                  <div key={a.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-1.5">
+                    <div className="text-xs font-extrabold text-blue-400">{a.title}</div>
+                    <p className="text-xs text-slate-300 leading-relaxed">{a.content}</p>
+                    <div className="text-[10px] text-slate-500 pt-1">
+                      Comando da Polícia Militar • @{a.author_nick} • {formatDateTime(a.created_at)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
