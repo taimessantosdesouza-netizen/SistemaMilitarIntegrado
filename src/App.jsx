@@ -242,25 +242,31 @@ export default function App() {
       }
 
       const now = ctx.currentTime;
-      const notes = [932.33, 1244.51];
+      const notes = [880, 1174.66];
+
       notes.forEach((freq, idx) => {
+        const startAt = now + idx * 0.18;
+        const duration = 0.22;
+
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, now + idx * 0.15);
 
-        gain.gain.setValueAtTime(0.001, now + idx * 0.15);
-        gain.gain.exponentialRampToValueAtTime(0.22, now + idx * 0.15 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.15 + 0.22);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startAt);
+
+        gain.gain.setValueAtTime(0.0001, startAt);
+        gain.gain.linearRampToValueAtTime(0.35, startAt + 0.02);
+        gain.gain.setValueAtTime(0.35, startAt + duration - 0.05);
+        gain.gain.linearRampToValueAtTime(0.0001, startAt + duration);
 
         osc.connect(gain);
         gain.connect(ctx.destination);
 
-        osc.start(now + idx * 0.15);
-        osc.stop(now + idx * 0.15 + 0.24);
+        osc.start(startAt);
+        osc.stop(startAt + duration + 0.02);
       });
-    } catch {
-      // Ignora se bloqueado pela política de mídia do navegador
+    } catch (err) {
+      console.warn('Não foi possível reproduzir o som da notificação:', err);
     }
   }, [unlockAudioContext]);
 
@@ -1105,12 +1111,21 @@ export default function App() {
             {isHighRank && (
               <button
                 type="button"
-                onClick={() => {
-                  const next = !soundEnabled;
-                  setSoundEnabled(next);
-                  if (next) playNotificationSound();
+                onClick={async () => {
+                  unlockAudioContext();
+                  if (!soundEnabled) {
+                    setSoundEnabled(true);
+                    soundEnabledRef.current = true;
+                    await playNotificationSound();
+                  } else {
+                    await playNotificationSound();
+                  }
                 }}
-                title={soundEnabled ? 'Som de notificação ligado' : 'Som de notificação mudo'}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setSoundEnabled((prev) => !prev);
+                }}
+                title="Clique para testar o som (botão direito liga/desliga)"
                 className={`p-2 rounded-xl border text-xs font-semibold transition flex items-center gap-1 ${
                   soundEnabled
                     ? 'bg-amber-500/15 border-amber-500/35 text-amber-300 hover:bg-amber-500/25'
@@ -1144,7 +1159,7 @@ export default function App() {
               }`}
             >
               <Award className="w-4 h-4" />
-              Alto Comando & Ponto ({activeShiftsAll.length} ativos)
+              Alto Comando ({activeShiftsAll.length} ativos)
               {isHighRank && pendingReportsCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-rose-500/25 text-rose-200 border border-rose-500/40">
                   {pendingReportsCount} rel.
@@ -1234,10 +1249,10 @@ export default function App() {
               <div>
                 <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
                   <Award className="w-5 h-5" />
-                  CENTRAL DE COMANDO E AUDITORIA — {currentUser.rank_name.toUpperCase()}
+                  CENTRAL DE COMANDO — {currentUser.rank_name.toUpperCase()}
                 </div>
                 <p className="text-xs text-slate-300 mt-1">
-                  Acesso privilegiado: monitoração em tempo real de início/término de turnos, prontuário completo de todo o efetivo, promoções e credenciais.
+                  Gestão administrativa do efetivo, promoções, advertências e pasta de relatórios. A auditoria de turnos fica em <strong>Ponto & Patrulha</strong>.
                 </p>
               </div>
               <div className="flex gap-3">
@@ -1250,8 +1265,8 @@ export default function App() {
                   <div className="text-[10px] uppercase text-slate-400">Total Efetivo</div>
                 </div>
                 <div className="bg-slate-950/80 border border-slate-800 px-4 py-2 rounded-xl text-center">
-                  <div className="text-lg font-extrabold text-amber-400">{dutyLogs.length}</div>
-                  <div className="text-[10px] uppercase text-slate-400">Turnos Registrados</div>
+                  <div className="text-lg font-extrabold text-amber-400">{pendingReportsCount}</div>
+                  <div className="text-[10px] uppercase text-slate-400">Rel. Pendentes</div>
                 </div>
               </div>
             </div>
@@ -1456,108 +1471,6 @@ export default function App() {
               </div>
             )}
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <div>
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-amber-400" />
-                    Auditoria de Ponto Eletrônico (Início e Término de Turno)
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    Registro exato de entrada, saída, duração total e viatura de todos os policiais.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <select
-                    value={dutyFilterOfficer}
-                    onChange={(e) => setDutyFilterOfficer(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
-                  >
-                    <option value="TODOS">Todos os Policiais</option>
-                    {officers.map((o) => (
-                      <option key={o.id} value={o.roblox_nick}>
-                        {o.badge_number} • {o.rp_name} (@{o.roblox_nick})
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={dutyFilterStatus}
-                    onChange={(e) => setDutyFilterStatus(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
-                  >
-                    <option value="TODOS">Todos os Status</option>
-                    <option value="EM_SERVICO">Em Serviço (Ativos)</option>
-                    <option value="ENCERRADO">Turnos Encerrados</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-800 text-[11px] uppercase text-slate-400">
-                      <th className="py-2.5 px-3">Policial / Matrícula</th>
-                      <th className="py-2.5 px-3">Patente</th>
-                      <th className="py-2.5 px-3">Viatura / Setor</th>
-                      <th className="py-2.5 px-3">Início do Turno</th>
-                      <th className="py-2.5 px-3">Encerramento do Turno</th>
-                      <th className="py-2.5 px-3">Duração</th>
-                      <th className="py-2.5 px-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/70 text-xs">
-                    {filteredDutyLogs.map((log) => {
-                      const liveSec =
-                        log.status === 'EM_SERVICO'
-                          ? Math.floor((nowTick - new Date(log.started_at).getTime()) / 1000)
-                          : log.duration_seconds;
-                      return (
-                        <tr key={log.id} className="hover:bg-slate-800/40">
-                          <td className="py-3 px-3">
-                            <div className="font-bold text-white">{log.officer_rp_name}</div>
-                            <div className="text-[11px] font-mono text-slate-400">
-                              {log.badge_number} • @{log.officer_nick}
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 text-slate-300">{log.officer_rank}</td>
-                          <td className="py-3 px-3">
-                            <div className="text-blue-400 font-semibold">{log.vtr_prefix}</div>
-                            <div className="text-[11px] text-slate-400">{log.patrol_area}</div>
-                          </td>
-                          <td className="py-3 px-3 font-mono text-emerald-300">
-                            {formatDateTime(log.started_at)}
-                          </td>
-                          <td className="py-3 px-3 font-mono text-slate-300">
-                            {log.ended_at ? (
-                              formatDateTime(log.ended_at)
-                            ) : (
-                              <span className="text-emerald-400 italic">Patrulhando agora...</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-3 font-mono font-bold text-white">
-                            {formatDuration(liveSec)}
-                          </td>
-                          <td className="py-3 px-3">
-                            {log.status === 'EM_SERVICO' ? (
-                              <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                                EM SERVIÇO
-                              </span>
-                            ) : (
-                              <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
-                                ENCERRADO
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
                 <h2 className="text-base font-bold text-white flex items-center gap-2 mb-4">
@@ -1723,158 +1636,264 @@ export default function App() {
         )}
 
         {activeTab === 'operacional' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
-              <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Radio className="w-5 h-5 text-blue-400" />
-                  Controle de Ponto Eletrônico (#serviço-operacional)
-                </h2>
-                <p className="text-xs text-slate-400">
-                  Seu horário de entrada e saída fica registrado automaticamente para auditoria do Alto Comando.
-                </p>
-              </div>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+                <div>
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Radio className="w-5 h-5 text-blue-400" />
+                    Controle de Ponto Eletrônico (#serviço-operacional)
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Seu horário de entrada e saída fica registrado automaticamente para auditoria do Alto Comando.
+                  </p>
+                </div>
 
-              {!activeShift ? (
-                <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-slate-400 mb-1">Prefixo da Viatura (VTR)</label>
-                      <select
-                        value={vtrPrefix}
-                        onChange={(e) => setVtrPrefix(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white"
-                      >
-                        <option value="Caracterizada">VTR Caracterizada</option>
-                        <option value="VTR-01 Patrulha">VTR-01 Patrulha</option>
-                        <option value="VTR-02 Tática">VTR-02 Tática</option>
-                        <option value="GTM Motopatrulha">GTM Motopatrulha</option>
-                        <option value="Descaracterizada (P2)">Descaracterizada (P2)</option>
-                      </select>
+                {!activeShift ? (
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Prefixo da Viatura (VTR)</label>
+                        <select
+                          value={vtrPrefix}
+                          onChange={(e) => setVtrPrefix(e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white"
+                        >
+                          <option value="Caracterizada">VTR Caracterizada</option>
+                          <option value="VTR-01 Patrulha">VTR-01 Patrulha</option>
+                          <option value="VTR-02 Tática">VTR-02 Tática</option>
+                          <option value="GTM Motopatrulha">GTM Motopatrulha</option>
+                          <option value="Descaracterizada (P2)">Descaracterizada (P2)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Setor / Área de Patrulhamento</label>
+                        <input
+                          type="text"
+                          value={patrolArea}
+                          onChange={(e) => setPatrolArea(e.target.value)}
+                          placeholder="Ex: GV e Horton, Túnel de Brookmere..."
+                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white"
+                        />
+                      </div>
                     </div>
+
+                    <button
+                      onClick={handleStartShift}
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950"
+                    >
+                      <CheckCircle2 className="w-5 h-5" />
+                      INICIAR TURNO OPERACIONAL AGORA
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-emerald-950/20 border border-emerald-500/40 rounded-xl p-5 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <span className="text-xs font-bold uppercase text-emerald-400">Turno Ativo em Andamento</span>
+                        <div className="text-3xl font-mono font-extrabold text-white mt-1">
+                          {formatDuration(elapsedSeconds)}
+                        </div>
+                        <p className="text-xs text-slate-300 mt-1">
+                          Iniciado em: <strong>{formatDateTime(activeShift.started_at)}</strong> • {activeShift.vtr_prefix} ({activeShift.patrol_area})
+                        </p>
+                      </div>
+                    </div>
+
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Setor / Área de Patrulhamento</label>
-                      <input
-                        type="text"
-                        value={patrolArea}
-                        onChange={(e) => setPatrolArea(e.target.value)}
-                        placeholder="Ex: GV e Horton, Túnel de Brookmere..."
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white"
+                      <label className="block text-xs text-slate-300 mb-1">
+                        Resumo das Ocorrências / Observações para Encerramento
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={shiftSummary}
+                        onChange={(e) => setShiftSummary(e.target.value)}
+                        placeholder="Ex: Patrulhamento em GV e Horton, 1 perseguição atendida, nenhuma prisão realizada..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white"
                       />
                     </div>
+
+                    <button
+                      onClick={handleEndShift}
+                      className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"
+                    >
+                      <Clock className="w-5 h-5" />
+                      ENCERRAR TURNO E REGISTRAR HORÁRIO DE SAÍDA
+                    </button>
                   </div>
+                )}
 
-                  <button
-                    onClick={handleStartShift}
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950"
-                  >
-                    <CheckCircle2 className="w-5 h-5" />
-                    INICIAR TURNO OPERACIONAL AGORA
-                  </button>
-                </div>
-              ) : (
-                <div className="bg-emerald-950/20 border border-emerald-500/40 rounded-xl p-5 space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <span className="text-xs font-bold uppercase text-emerald-400">Turno Ativo em Andamento</span>
-                      <div className="text-3xl font-mono font-extrabold text-white mt-1">
-                        {formatDuration(elapsedSeconds)}
-                      </div>
-                      <p className="text-xs text-slate-300 mt-1">
-                        Iniciado em: <strong>{formatDateTime(activeShift.started_at)}</strong> • {activeShift.vtr_prefix} ({activeShift.patrol_area})
-                      </p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs text-slate-300 mb-1">
-                      Resumo das Ocorrências / Observações para Encerramento
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={shiftSummary}
-                      onChange={(e) => setShiftSummary(e.target.value)}
-                      placeholder="Ex: Patrulhamento em GV e Horton, 1 perseguição atendida, nenhuma prisão realizada..."
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleEndShift}
-                    className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"
-                  >
-                    <Clock className="w-5 h-5" />
-                    ENCERRAR TURNO E REGISTRAR HORÁRIO DE SAÍDA
-                  </button>
-                </div>
-              )}
-
-              <div>
-                <h3 className="text-sm font-bold text-slate-300 mb-3">Meus Últimos Turnos Registrados</h3>
-                <div className="space-y-2">
-                  {dutyLogs
-                    .filter((l) => l.officer_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase())
-                    .slice(0, 5)
-                    .map((log) => (
-                      <div
-                        key={log.id}
-                        className="bg-slate-950 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs"
-                      >
-                        <div>
-                          <div className="font-semibold text-white">
-                            {log.vtr_prefix} • {log.patrol_area}
+                <div>
+                  <h3 className="text-sm font-bold text-slate-300 mb-3">Meus Últimos Turnos Registrados</h3>
+                  <div className="space-y-2">
+                    {dutyLogs
+                      .filter((l) => l.officer_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase())
+                      .slice(0, 5)
+                      .map((log) => (
+                        <div
+                          key={log.id}
+                          className="bg-slate-950 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs"
+                        >
+                          <div>
+                            <div className="font-semibold text-white">
+                              {log.vtr_prefix} • {log.patrol_area}
+                            </div>
+                            <div className="text-slate-400 font-mono text-[11px]">
+                              Início: {formatDateTime(log.started_at)} | Fim: {log.ended_at ? formatDateTime(log.ended_at) : 'Ativo'}
+                            </div>
                           </div>
-                          <div className="text-slate-400 font-mono text-[11px]">
-                            Início: {formatDateTime(log.started_at)} | Fim: {log.ended_at ? formatDateTime(log.ended_at) : 'Ativo'}
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-blue-400">
+                              {formatDuration(log.duration_seconds)}
+                            </span>
+                            <button
+                              onClick={() => copyDiscordFormat(formatDutyForDiscord(log), log.id)}
+                              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1"
+                            >
+                              {copiedId === log.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                              Discord
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-blue-400">
-                            {formatDuration(log.duration_seconds)}
-                          </span>
-                          <button
-                            onClick={() => copyDiscordFormat(formatDutyForDiscord(log), log.id)}
-                            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1"
-                          >
-                            {copiedId === log.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                            Discord
-                          </button>
+                      ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
+                  <Activity className="w-5 h-5 text-emerald-400" />
+                  Viaturas em QAP ({activeShiftsAll.length})
+                </h3>
+
+                {activeShiftsAll.length === 0 ? (
+                  <p className="text-xs text-slate-400 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                    Nenhuma viatura em patrulhamento ativo no momento.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {activeShiftsAll.map((s) => (
+                      <div key={s.id} className="bg-slate-950 border border-emerald-500/30 rounded-xl p-3.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-white">{s.officer_rp_name}</span>
+                          <span className="text-[10px] font-mono text-emerald-400 font-bold">ONLINE</span>
+                        </div>
+                        <div className="text-slate-400 text-[11px] mt-0.5">
+                          {s.officer_rank} • {s.vtr_prefix}
+                        </div>
+                        <div className="text-slate-500 font-mono text-[10px] mt-2">
+                          Entrada: {formatDateTime(s.started_at)}
                         </div>
                       </div>
                     ))}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-              <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
-                <Activity className="w-5 h-5 text-emerald-400" />
-                Viaturas em QAP ({activeShiftsAll.length})
-              </h3>
+            {isHighCommand && (
+              <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h2 className="text-base font-bold text-white flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-amber-400" />
+                      Auditoria de Ponto Eletrônico (Início e Término de Turno)
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      Registro exato de entrada, saída, duração total e viatura de todos os policiais ({dutyLogs.length} turnos registrados).
+                    </p>
+                  </div>
 
-              {activeShiftsAll.length === 0 ? (
-                <p className="text-xs text-slate-400 bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  Nenhuma viatura em patrulhamento ativo no momento.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {activeShiftsAll.map((s) => (
-                    <div key={s.id} className="bg-slate-950 border border-emerald-500/30 rounded-xl p-3.5 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-white">{s.officer_rp_name}</span>
-                        <span className="text-[10px] font-mono text-emerald-400 font-bold">ONLINE</span>
-                      </div>
-                      <div className="text-slate-400 text-[11px] mt-0.5">
-                        {s.officer_rank} • {s.vtr_prefix}
-                      </div>
-                      <div className="text-slate-500 font-mono text-[10px] mt-2">
-                        Entrada: {formatDateTime(s.started_at)}
-                      </div>
-                    </div>
-                  ))}
+                  <div className="flex flex-wrap gap-2">
+                    <select
+                      value={dutyFilterOfficer}
+                      onChange={(e) => setDutyFilterOfficer(e.target.value)}
+                      className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+                    >
+                      <option value="TODOS">Todos os Policiais</option>
+                      {officers.map((o) => (
+                        <option key={o.id} value={o.roblox_nick}>
+                          {o.badge_number} • {o.rp_name} (@{o.roblox_nick})
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      value={dutyFilterStatus}
+                      onChange={(e) => setDutyFilterStatus(e.target.value)}
+                      className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+                    >
+                      <option value="TODOS">Todos os Status</option>
+                      <option value="EM_SERVICO">Em Serviço (Ativos)</option>
+                      <option value="ENCERRADO">Turnos Encerrados</option>
+                    </select>
+                  </div>
                 </div>
-              )}
-            </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-[11px] uppercase text-slate-400">
+                        <th className="py-2.5 px-3">Policial / Matrícula</th>
+                        <th className="py-2.5 px-3">Patente</th>
+                        <th className="py-2.5 px-3">Viatura / Setor</th>
+                        <th className="py-2.5 px-3">Início do Turno</th>
+                        <th className="py-2.5 px-3">Encerramento do Turno</th>
+                        <th className="py-2.5 px-3">Duração</th>
+                        <th className="py-2.5 px-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/70 text-xs">
+                      {filteredDutyLogs.map((log) => {
+                        const liveSec =
+                          log.status === 'EM_SERVICO'
+                            ? Math.floor((nowTick - new Date(log.started_at).getTime()) / 1000)
+                            : log.duration_seconds;
+                        return (
+                          <tr key={log.id} className="hover:bg-slate-800/40">
+                            <td className="py-3 px-3">
+                              <div className="font-bold text-white">{log.officer_rp_name}</div>
+                              <div className="text-[11px] font-mono text-slate-400">
+                                {log.badge_number} • @{log.officer_nick}
+                              </div>
+                            </td>
+                            <td className="py-3 px-3 text-slate-300">{log.officer_rank}</td>
+                            <td className="py-3 px-3">
+                              <div className="text-blue-400 font-semibold">{log.vtr_prefix}</div>
+                              <div className="text-[11px] text-slate-400">{log.patrol_area}</div>
+                            </td>
+                            <td className="py-3 px-3 font-mono text-emerald-300">
+                              {formatDateTime(log.started_at)}
+                            </td>
+                            <td className="py-3 px-3 font-mono text-slate-300">
+                              {log.ended_at ? (
+                                formatDateTime(log.ended_at)
+                              ) : (
+                                <span className="text-emerald-400 italic">Patrulhando agora...</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 font-mono font-bold text-white">
+                              {formatDuration(liveSec)}
+                            </td>
+                            <td className="py-3 px-3">
+                              {log.status === 'EM_SERVICO' ? (
+                                <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                  EM SERVIÇO
+                                </span>
+                              ) : (
+                                <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                                  ENCERRADO
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
