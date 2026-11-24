@@ -672,6 +672,32 @@ export default function App() {
 
         <div className="w-full max-w-md z-10">
           <div className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl p-8 backdrop-blur-md">
+            <div className="mb-6 p-3 rounded-xl bg-slate-950/90 border border-slate-800/90 flex items-center justify-between gap-2 text-[11px]">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    isSupabaseConfigured ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                  }`}
+                />
+                <span className="font-mono font-bold text-slate-200">
+                  {isSupabaseConfigured ? 'REDE CENTRAL ONLINE' : 'MODO LOCAL'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-slate-400">
+                <span className="text-blue-400 font-semibold">
+                  {activeShiftsAll.length} {activeShiftsAll.length === 1 ? 'VTR em QAP' : 'VTRs em QAP'}
+                </span>
+                <span>•</span>
+                <span>
+                  {new Date(nowTick).toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                  })}
+                </span>
+              </div>
+            </div>
+
             <div className="flex flex-col items-center text-center mb-6">
               <div className="w-16 h-16 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center mb-4 shadow-lg shadow-blue-950/50">
                 <Shield className="w-9 h-9 text-blue-400" />
