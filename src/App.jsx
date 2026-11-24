@@ -3,7 +3,7 @@ import {
   Shield, Lock, LogOut, Radio, Users, Car, FileText, AlertTriangle,
   CheckCircle2, Clock, Search, Plus, Copy, Check, Award,
   UserCheck, KeyRound, Scale, Megaphone, Database,
-  Activity, ShieldAlert
+  Activity, ShieldAlert, FolderLock, ChevronDown, ChevronRight, Trash2
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
@@ -212,6 +212,7 @@ export default function App() {
   });
   const [reviewNotesMap, setReviewNotesMap] = useState({});
   const [reportFilterStatus, setReportFilterStatus] = useState('TODOS');
+  const [commandFolderOpen, setCommandFolderOpen] = useState(false);
 
   const [dutyFilterOfficer, setDutyFilterOfficer] = useState('TODOS');
   const [dutyFilterStatus, setDutyFilterStatus] = useState('TODOS');
@@ -277,6 +278,14 @@ export default function App() {
     () => dutyLogs.filter((d) => d.status === 'EM_SERVICO'),
     [dutyLogs]
   );
+
+  const reportStats = useMemo(() => {
+    const total = reports.length;
+    const pendentes = reports.filter((r) => (r.review_status || 'PENDENTE') === 'PENDENTE').length;
+    const aprovados = reports.filter((r) => r.review_status === 'APROVADO').length;
+    const reprovados = reports.filter((r) => r.review_status === 'REPROVADO').length;
+    return { total, pendentes, aprovados, reprovados };
+  }, [reports]);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -500,6 +509,29 @@ export default function App() {
     }
   };
 
+  const handleDeleteReport = async (report) => {
+    const canDelete =
+      isHighRank ||
+      repAuthorMatches(report, currentUser);
+    if (!canDelete) return;
+
+    setReports((prev) => prev.filter((r) => r.id !== report.id));
+    setReviewNotesMap((prev) => {
+      const copy = { ...prev };
+      delete copy[report.id];
+      return copy;
+    });
+
+    if (isSupabaseConfigured && supabase) {
+      await supabase.from('pm_reports').delete().eq('id', report.id);
+    }
+  };
+
+  function repAuthorMatches(rep, user) {
+    if (!rep || !user) return false;
+    return (rep.author_nick || '').toLowerCase() === (user.roblox_nick || '').toLowerCase();
+  }
+
   const copyDiscordFormat = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
@@ -664,6 +696,111 @@ export default function App() {
       bailAllowed: chosen.length > 0 && chosen.every((a) => a.bail)
     };
   }, [selectedArticles]);
+
+  const renderReportCard = (rep) => {
+    const status = rep.review_status || 'PENDENTE';
+    const canDelete = isHighRank || repAuthorMatches(rep, currentUser);
+
+    return (
+      <div key={rep.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold">
+              {rep.incident_code}
+            </span>
+            <span
+              className={`px-2.5 py-0.5 rounded text-xs font-bold border ${
+                status === 'APROVADO'
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                  : status === 'REPROVADO'
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                  : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+              }`}
+            >
+              {status}
+            </span>
+            <span className="font-bold text-white text-sm">{rep.location}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => copyDiscordFormat(formatReportForDiscord(rep), rep.id)}
+              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5"
+            >
+              {copiedId === rep.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copiedId === rep.id ? 'Copiado!' : 'Copiar p/ Discord'}
+            </button>
+
+            {canDelete && (
+              <button
+                type="button"
+                onClick={() => handleDeleteReport(rep)}
+                title="Apagar relatório"
+                className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-600/30 hover:text-rose-300 border border-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1 transition"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Apagar</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
+          {rep.description}
+        </p>
+
+        <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-400">
+          <span>Responsável: <strong className="text-slate-200">@{rep.author_nick}</strong> ({rep.author_rank})</span>
+          <span>Envolvidos: <strong className="text-slate-200">{rep.involved_citizens || 'N/A'}</strong></span>
+          <span>Resultado: <strong className="text-emerald-400">{rep.outcome}</strong></span>
+          <span className="font-mono">{formatDateTime(rep.created_at)}</span>
+        </div>
+
+        {rep.reviewed_by && (
+          <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs space-y-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-bold text-slate-200">
+                Avaliação do Comando: @{rep.reviewed_by} ({rep.reviewer_rank})
+              </span>
+              <span className="text-[10px] font-mono text-slate-500">
+                {formatDateTime(rep.reviewed_at)}
+              </span>
+            </div>
+            <p className="text-slate-300">{rep.review_notes}</p>
+          </div>
+        )}
+
+        {isHighRank && (
+          <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              placeholder="Parecer do Comando / observação (opcional)..."
+              value={reviewNotesMap[rep.id] ?? rep.review_notes ?? ''}
+              onChange={(e) => setReviewNotesMap((prev) => ({ ...prev, [rep.id]: e.target.value }))}
+              className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+            />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => handleReviewReport(rep, 'APROVADO')}
+                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
+              >
+                Aprovar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleReviewReport(rep, 'REPROVADO')}
+                className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold"
+              >
+                Reprovar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   if (!currentUser) {
     return (
@@ -1002,6 +1139,90 @@ export default function App() {
                 </div>
               </div>
             </div>
+
+            {isHighRank && (
+              <div className="bg-slate-900 border border-amber-500/30 rounded-2xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setCommandFolderOpen((prev) => !prev)}
+                  className="w-full p-5 flex flex-wrap items-center justify-between gap-3 text-left hover:bg-slate-800/40 transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-300">
+                      <FolderLock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-extrabold text-amber-300">
+                          PASTA RESERVADA DO COMANDO — REGISTROS E RELATÓRIOS
+                        </span>
+                        {commandFolderOpen ? (
+                          <ChevronDown className="w-4 h-4 text-amber-300" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-amber-300" />
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Área recolhida para manter o painel limpo. Abra para revisar, <strong>aprovar</strong>, <strong>reprovar</strong> ou <strong>apagar</strong> relatórios enviados pelo efetivo.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      {reportStats.pendentes} pendentes
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                      {reportStats.aprovados} aprovados
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                      {reportStats.reprovados} reprovados
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-950 text-slate-300 border border-slate-800">
+                      {commandFolderOpen ? 'Fechar pasta' : 'Abrir pasta'}
+                    </span>
+                  </div>
+                </button>
+
+                {commandFolderOpen && (
+                  <div className="p-5 pt-2 border-t border-slate-800/80 space-y-4 bg-slate-950/40">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="text-xs text-slate-300">
+                        Use o filtro abaixo para focar nos relatórios pendentes ou já avaliados:
+                      </span>
+                      <select
+                        value={reportFilterStatus}
+                        onChange={(e) => setReportFilterStatus(e.target.value)}
+                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+                      >
+                        <option value="TODOS">Todos os Status ({reportStats.total})</option>
+                        <option value="PENDENTE">Pendentes ({reportStats.pendentes})</option>
+                        <option value="APROVADO">Aprovados ({reportStats.aprovados})</option>
+                        <option value="REPROVADO">Reprovados ({reportStats.reprovados})</option>
+                      </select>
+                    </div>
+
+                    {reports.filter((rep) => {
+                      const status = rep.review_status || 'PENDENTE';
+                      return reportFilterStatus === 'TODOS' || status === reportFilterStatus;
+                    }).length === 0 ? (
+                      <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs text-slate-400">
+                        Nenhum relatório encontrado neste filtro.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {reports
+                          .filter((rep) => {
+                            const status = rep.review_status || 'PENDENTE';
+                            return reportFilterStatus === 'TODOS' || status === reportFilterStatus;
+                          })
+                          .map(renderReportCard)}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -1860,8 +2081,8 @@ export default function App() {
                 <div className="text-xs text-slate-300">
                   {isHighRank ? (
                     <>
-                      <strong className="text-amber-400">Visão de Patente Alta:</strong> Você visualiza todos os relatórios e pode{' '}
-                      <strong className="text-white">Aprovar</strong> ou <strong className="text-white">Reprovar</strong>.
+                      <strong className="text-amber-400">Visão de Patente Alta:</strong> Você visualiza todos os relatórios, pode{' '}
+                      <strong className="text-white">Aprovar</strong> ou <strong className="text-white">Reprovar</strong> e apagar registros antigos.
                     </>
                   ) : (
                     <>
@@ -1883,100 +2104,13 @@ export default function App() {
 
               {reports
                 .filter((rep) => {
-                  const canView =
-                    isHighRank ||
-                    rep.author_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase();
+                  const canView = isHighRank || repAuthorMatches(rep, currentUser);
                   if (!canView) return false;
 
                   const status = rep.review_status || 'PENDENTE';
                   return reportFilterStatus === 'TODOS' || status === reportFilterStatus;
                 })
-                .map((rep) => {
-                  const status = rep.review_status || 'PENDENTE';
-                  return (
-                    <div key={rep.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold">
-                            {rep.incident_code}
-                          </span>
-                          <span
-                            className={`px-2.5 py-0.5 rounded text-xs font-bold border ${
-                              status === 'APROVADO'
-                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                                : status === 'REPROVADO'
-                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                                : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                            }`}
-                          >
-                            {status}
-                          </span>
-                          <span className="font-bold text-white text-sm">{rep.location}</span>
-                        </div>
-                        <button
-                          onClick={() => copyDiscordFormat(formatReportForDiscord(rep), rep.id)}
-                          className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5"
-                        >
-                          {copiedId === rep.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                          {copiedId === rep.id ? 'Copiado!' : 'Copiar p/ Discord'}
-                        </button>
-                      </div>
-
-                      <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                        {rep.description}
-                      </p>
-
-                      <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-400">
-                        <span>Responsável: <strong className="text-slate-200">@{rep.author_nick}</strong> ({rep.author_rank})</span>
-                        <span>Envolvidos: <strong className="text-slate-200">{rep.involved_citizens || 'N/A'}</strong></span>
-                        <span>Resultado: <strong className="text-emerald-400">{rep.outcome}</strong></span>
-                        <span className="font-mono">{formatDateTime(rep.created_at)}</span>
-                      </div>
-
-                      {rep.reviewed_by && (
-                        <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs space-y-1">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="font-bold text-slate-200">
-                              Avaliação do Comando: @{rep.reviewed_by} ({rep.reviewer_rank})
-                            </span>
-                            <span className="text-[10px] font-mono text-slate-500">
-                              {formatDateTime(rep.reviewed_at)}
-                            </span>
-                          </div>
-                          <p className="text-slate-300">{rep.review_notes}</p>
-                        </div>
-                      )}
-
-                      {isHighRank && (
-                        <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row gap-2">
-                          <input
-                            type="text"
-                            placeholder="Parecer do Comando / observação (opcional)..."
-                            value={reviewNotesMap[rep.id] ?? rep.review_notes ?? ''}
-                            onChange={(e) => setReviewNotesMap((prev) => ({ ...prev, [rep.id]: e.target.value }))}
-                            className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
-                          />
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleReviewReport(rep, 'APROVADO')}
-                              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
-                            >
-                              Aprovar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleReviewReport(rep, 'REPROVADO')}
-                              className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold"
-                            >
-                              Reprovar
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                .map(renderReportCard)}
             </div>
           </div>
         )}
