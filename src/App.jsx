@@ -233,6 +233,7 @@ export default function App() {
 
   const isHighCommand = currentUser && currentUser.rank_level >= 3;
   const isTopCommand = currentUser && currentUser.rank_level >= 4;
+  const isHighRank = currentUser && currentUser.rank_level >= 4;
 
   useEffect(() => {
     const timer = setInterval(() => setNowTick(Date.now()), 1000);
@@ -474,7 +475,7 @@ export default function App() {
   };
 
   const handleReviewReport = async (report, decision) => {
-    if (!isHighCommand) return;
+    if (!isHighRank) return;
     const notes = (reviewNotesMap[report.id] || '').trim();
     const reviewedAt = new Date().toISOString();
 
@@ -485,8 +486,8 @@ export default function App() {
       review_notes:
         notes ||
         (decision === 'APROVADO'
-          ? 'Aprovado pela Corregedoria / Superior.'
-          : 'Reprovado pela Corregedoria / Superior. Revisar informações.'),
+          ? 'Aprovado pelo Comando.'
+          : 'Reprovado pelo Comando. Revisar informações.'),
       reviewed_at: reviewedAt
     };
 
@@ -509,7 +510,7 @@ export default function App() {
     const statusLabel = r.review_status || 'PENDENTE';
     const parecerLinha = r.reviewed_by
       ? `\n• **Parecer (${statusLabel} por @${r.reviewed_by}):** ${r.review_notes || 'Sem observações'}`
-      : `\n• **Status Corregedoria:** ${statusLabel}`;
+      : `\n• **Status Comando:** ${statusLabel}`;
 
     return `🚓 **RELATÓRIO PÓS-OCORRÊNCIA — POLÍCIA MILITAR DE PANTANÓRIA**
 • **Responsável:** @${r.author_nick}
@@ -1823,7 +1824,7 @@ export default function App() {
                   type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition"
                 >
-                  Enviar para Corregedoria
+                  Enviar para o Comando
                 </button>
               </form>
             </div>
@@ -1831,8 +1832,16 @@ export default function App() {
             <div className="lg:col-span-2 space-y-4">
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs text-slate-300">
-                  <strong className="text-white">Fluxo da Corregedoria:</strong> Novos relatórios entram como{' '}
-                  <span className="text-amber-400 font-semibold">PENDENTE</span> até aprovação ou reprovação de superior.
+                  {isHighRank ? (
+                    <>
+                      <strong className="text-amber-400">Visão de Patente Alta:</strong> Você visualiza todos os relatórios e pode{' '}
+                      <strong className="text-white">Aprovar</strong> ou <strong className="text-white">Reprovar</strong>.
+                    </>
+                  ) : (
+                    <>
+                      <strong className="text-blue-400">Acesso Restrito:</strong> Você visualiza apenas os relatórios enviados por você até análise do Comando.
+                    </>
+                  )}
                 </div>
                 <select
                   value={reportFilterStatus}
@@ -1847,7 +1856,15 @@ export default function App() {
               </div>
 
               {reports
-                .filter((rep) => reportFilterStatus === 'TODOS' || (rep.review_status || 'PENDENTE') === reportFilterStatus)
+                .filter((rep) => {
+                  const canView =
+                    isHighRank ||
+                    rep.author_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase();
+                  if (!canView) return false;
+
+                  const status = rep.review_status || 'PENDENTE';
+                  return reportFilterStatus === 'TODOS' || status === reportFilterStatus;
+                })
                 .map((rep) => {
                   const status = rep.review_status || 'PENDENTE';
                   return (
@@ -1894,7 +1911,7 @@ export default function App() {
                         <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs space-y-1">
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <span className="font-bold text-slate-200">
-                              Avaliação da Corregedoria / Superior: @{rep.reviewed_by} ({rep.reviewer_rank})
+                              Avaliação do Comando: @{rep.reviewed_by} ({rep.reviewer_rank})
                             </span>
                             <span className="text-[10px] font-mono text-slate-500">
                               {formatDateTime(rep.reviewed_at)}
@@ -1904,11 +1921,11 @@ export default function App() {
                         </div>
                       )}
 
-                      {isHighCommand && (
+                      {isHighRank && (
                         <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row gap-2">
                           <input
                             type="text"
-                            placeholder="Parecer da Corregedoria / observação (opcional)..."
+                            placeholder="Parecer do Comando / observação (opcional)..."
                             value={reviewNotesMap[rep.id] ?? rep.review_notes ?? ''}
                             onChange={(e) => setReviewNotesMap((prev) => ({ ...prev, [rep.id]: e.target.value }))}
                             className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
