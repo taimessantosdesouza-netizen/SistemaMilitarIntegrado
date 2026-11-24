@@ -109,6 +109,11 @@ const INITIAL_REPORTS = [
     description: 'Detentos correndo em alta velocidade indo para o túnel em tentativa de fuga, sendo interceptados e detidos pela guarnição.',
     actions_taken: 'Cerco tático e algemação',
     outcome: 'Preso',
+    review_status: 'APROVADO',
+    reviewed_by: 'Felipe',
+    reviewer_rank: 'Comandante-Geral',
+    review_notes: 'Relatório claro e condizente com o registro de turno.',
+    reviewed_at: '2026-11-24T09:45:00-03:00',
     created_at: '2026-11-24T09:18:00-03:00'
   }
 ];
@@ -205,6 +210,8 @@ export default function App() {
     actions_taken: 'Abordagem e algemação',
     outcome: 'Preso'
   });
+  const [reviewNotesMap, setReviewNotesMap] = useState({});
+  const [reportFilterStatus, setReportFilterStatus] = useState('TODOS');
 
   const [dutyFilterOfficer, setDutyFilterOfficer] = useState('TODOS');
   const [dutyFilterStatus, setDutyFilterStatus] = useState('TODOS');
@@ -438,6 +445,11 @@ export default function App() {
       ...newReport,
       author_nick: currentUser.roblox_nick,
       author_rank: currentUser.rank_name,
+      review_status: 'PENDENTE',
+      reviewed_by: null,
+      reviewer_rank: null,
+      review_notes: '',
+      reviewed_at: null,
       created_at: new Date().toISOString()
     };
     const localItem = { id: crypto.randomUUID(), ...payload };
@@ -461,6 +473,32 @@ export default function App() {
     }
   };
 
+  const handleReviewReport = async (report, decision) => {
+    if (!isHighCommand) return;
+    const notes = (reviewNotesMap[report.id] || '').trim();
+    const reviewedAt = new Date().toISOString();
+
+    const updatedFields = {
+      review_status: decision,
+      reviewed_by: currentUser.roblox_nick,
+      reviewer_rank: currentUser.rank_name,
+      review_notes:
+        notes ||
+        (decision === 'APROVADO'
+          ? 'Aprovado pela Corregedoria / Superior.'
+          : 'Reprovado pela Corregedoria / Superior. Revisar informações.'),
+      reviewed_at: reviewedAt
+    };
+
+    setReports((prev) =>
+      prev.map((r) => (r.id === report.id ? { ...r, ...updatedFields } : r))
+    );
+
+    if (isSupabaseConfigured && supabase) {
+      await supabase.from('pm_reports').update(updatedFields).eq('id', report.id);
+    }
+  };
+
   const copyDiscordFormat = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
@@ -468,6 +506,11 @@ export default function App() {
   };
 
   const formatReportForDiscord = (r) => {
+    const statusLabel = r.review_status || 'PENDENTE';
+    const parecerLinha = r.reviewed_by
+      ? `\n• **Parecer (${statusLabel} por @${r.reviewed_by}):** ${r.review_notes || 'Sem observações'}`
+      : `\n• **Status Corregedoria:** ${statusLabel}`;
+
     return `🚓 **RELATÓRIO PÓS-OCORRÊNCIA — POLÍCIA MILITAR DE PANTANÓRIA**
 • **Responsável:** @${r.author_nick}
 • **Patente:** @${r.author_rank}
@@ -481,7 +524,7 @@ export default function App() {
 • **Pessoas envolvidas:** ${r.involved_citizens || 'Não identificado'}
 • **Descrição resumida:** ${r.description}
 • **Providências tomadas:** ${r.actions_taken || 'Nenhuma'}
-• **Resultado final:** ${r.outcome || 'Concluído'}
+• **Resultado final:** ${r.outcome || 'Concluído'}${parecerLinha}
 
 **Assinatura do responsável:** ${r.author_nick}`;
   };
@@ -1780,42 +1823,117 @@ export default function App() {
                   type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition"
                 >
-                  Registrar Relatório no Sistema
+                  Enviar para Corregedoria
                 </button>
               </form>
             </div>
 
             <div className="lg:col-span-2 space-y-4">
-              {reports.map((rep) => (
-                <div key={rep.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold">
-                        {rep.incident_code}
-                      </span>
-                      <span className="font-bold text-white text-sm">{rep.location}</span>
-                    </div>
-                    <button
-                      onClick={() => copyDiscordFormat(formatReportForDiscord(rep), rep.id)}
-                      className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5"
-                    >
-                      {copiedId === rep.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      {copiedId === rep.id ? 'Copiado!' : 'Copiar p/ Discord'}
-                    </button>
-                  </div>
-
-                  <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
-                    {rep.description}
-                  </p>
-
-                  <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-400">
-                    <span>Responsável: <strong className="text-slate-200">@{rep.author_nick}</strong> ({rep.author_rank})</span>
-                    <span>Envolvidos: <strong className="text-slate-200">{rep.involved_citizens || 'N/A'}</strong></span>
-                    <span>Resultado: <strong className="text-emerald-400">{rep.outcome}</strong></span>
-                    <span className="font-mono">{formatDateTime(rep.created_at)}</span>
-                  </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="text-xs text-slate-300">
+                  <strong className="text-white">Fluxo da Corregedoria:</strong> Novos relatórios entram como{' '}
+                  <span className="text-amber-400 font-semibold">PENDENTE</span> até aprovação ou reprovação de superior.
                 </div>
-              ))}
+                <select
+                  value={reportFilterStatus}
+                  onChange={(e) => setReportFilterStatus(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+                >
+                  <option value="TODOS">Todos os Status</option>
+                  <option value="PENDENTE">Pendentes de Avaliação</option>
+                  <option value="APROVADO">Aprovados</option>
+                  <option value="REPROVADO">Reprovados</option>
+                </select>
+              </div>
+
+              {reports
+                .filter((rep) => reportFilterStatus === 'TODOS' || (rep.review_status || 'PENDENTE') === reportFilterStatus)
+                .map((rep) => {
+                  const status = rep.review_status || 'PENDENTE';
+                  return (
+                    <div key={rep.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-bold">
+                            {rep.incident_code}
+                          </span>
+                          <span
+                            className={`px-2.5 py-0.5 rounded text-xs font-bold border ${
+                              status === 'APROVADO'
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                : status === 'REPROVADO'
+                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                            }`}
+                          >
+                            {status}
+                          </span>
+                          <span className="font-bold text-white text-sm">{rep.location}</span>
+                        </div>
+                        <button
+                          onClick={() => copyDiscordFormat(formatReportForDiscord(rep), rep.id)}
+                          className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5"
+                        >
+                          {copiedId === rep.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                          {copiedId === rep.id ? 'Copiado!' : 'Copiar p/ Discord'}
+                        </button>
+                      </div>
+
+                      <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        {rep.description}
+                      </p>
+
+                      <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-400">
+                        <span>Responsável: <strong className="text-slate-200">@{rep.author_nick}</strong> ({rep.author_rank})</span>
+                        <span>Envolvidos: <strong className="text-slate-200">{rep.involved_citizens || 'N/A'}</strong></span>
+                        <span>Resultado: <strong className="text-emerald-400">{rep.outcome}</strong></span>
+                        <span className="font-mono">{formatDateTime(rep.created_at)}</span>
+                      </div>
+
+                      {rep.reviewed_by && (
+                        <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs space-y-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-bold text-slate-200">
+                              Avaliação da Corregedoria / Superior: @{rep.reviewed_by} ({rep.reviewer_rank})
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-500">
+                              {formatDateTime(rep.reviewed_at)}
+                            </span>
+                          </div>
+                          <p className="text-slate-300">{rep.review_notes}</p>
+                        </div>
+                      )}
+
+                      {isHighCommand && (
+                        <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row gap-2">
+                          <input
+                            type="text"
+                            placeholder="Parecer da Corregedoria / observação (opcional)..."
+                            value={reviewNotesMap[rep.id] ?? rep.review_notes ?? ''}
+                            onChange={(e) => setReviewNotesMap((prev) => ({ ...prev, [rep.id]: e.target.value }))}
+                            className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleReviewReport(rep, 'APROVADO')}
+                              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
+                            >
+                              Aprovar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleReviewReport(rep, 'REPROVADO')}
+                              className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold"
+                            >
+                              Reprovar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           </div>
         )}
