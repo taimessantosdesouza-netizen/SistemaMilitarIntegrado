@@ -4,7 +4,7 @@ import {
   CheckCircle2, Clock, Search, Plus, Copy, Check, Award,
   UserCheck, KeyRound, Scale, Megaphone, Database,
   Activity, ShieldAlert, Folder, FolderOpen, Trash2, ChevronDown, ChevronUp,
-  Bell, X, Volume2
+  Bell, X, Volume2, Sparkles
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
@@ -343,6 +343,18 @@ export default function App() {
 
   const [dutyFilterOfficer, setDutyFilterOfficer] = useState('TODOS');
   const [dutyFilterStatus, setDutyFilterStatus] = useState('TODOS');
+
+  const nextSuggestedBadge = useMemo(() => {
+    const nums = officers
+      .map((o) => {
+        const match = String(o.badge_number || '').match(/(\d+)/);
+        return match ? Number(match[1]) : 0;
+      })
+      .filter((n) => !Number.isNaN(n));
+    const maxNum = nums.length > 0 ? Math.max(...nums) : officers.length;
+    return `PM-${String(maxNum + 1).padStart(3, '0')}`;
+  }, [officers]);
+
   const [newOfficer, setNewOfficer] = useState({
     badge_number: '',
     roblox_nick: '',
@@ -351,6 +363,8 @@ export default function App() {
     pin_code: '1234',
     status: 'Em Formação'
   });
+  const [recruitFeedback, setRecruitFeedback] = useState(null);
+
   const [newAnnouncement, setNewAnnouncement] = useState({
     title: '',
     category: 'COMUNICADO',
@@ -774,23 +788,75 @@ export default function App() {
 • **Assinatura do responsável:** ${d.officer_nick}`;
   };
 
+  const handleGeneratePin = () => {
+    const pin = String(Math.floor(1000 + Math.random() * 9000));
+    setNewOfficer((prev) => ({ ...prev, pin_code: pin }));
+  };
+
   const handleAddOfficer = async (e) => {
     e.preventDefault();
-    if (!isHighCommand || !newOfficer.badge_number || !newOfficer.roblox_nick) return;
+    if (!isHighCommand) return;
+
+    const cleanNick = newOfficer.roblox_nick.trim();
+    const cleanRpName = newOfficer.rp_name.trim();
+    const cleanBadge = (newOfficer.badge_number.trim() || nextSuggestedBadge).toUpperCase();
+    const cleanPin = (newOfficer.pin_code || '1234').trim();
+
+    if (!cleanNick || !cleanRpName) {
+      setRecruitFeedback({
+        type: 'error',
+        text: 'Preencha o Nick Roblox/Discord e o Nome de Guerra (RP) para incorporar.'
+      });
+      return;
+    }
+
+    const duplicate = officers.find(
+      (o) =>
+        o.roblox_nick.toLowerCase() === cleanNick.toLowerCase() ||
+        o.badge_number.toLowerCase() === cleanBadge.toLowerCase()
+    );
+    if (duplicate) {
+      setRecruitFeedback({
+        type: 'error',
+        text: `Já existe um integrante com matrícula ${duplicate.badge_number} ou nick @${duplicate.roblox_nick}.`
+      });
+      return;
+    }
+
     const rankObj = RANKS.find((r) => r.level === Number(newOfficer.rank_level)) || RANKS[4];
+    const defaultStatus = rankObj.level === 1 ? 'Em Formação' : newOfficer.status;
+
     const payload = {
-      badge_number: newOfficer.badge_number.toUpperCase(),
-      roblox_nick: newOfficer.roblox_nick.trim(),
-      rp_name: newOfficer.rp_name.trim() || newOfficer.roblox_nick.trim(),
+      badge_number: cleanBadge,
+      roblox_nick: cleanNick,
+      rp_name: cleanRpName,
       rank_level: rankObj.level,
       rank_name: rankObj.name,
-      pin_code: newOfficer.pin_code || '1234',
-      status: newOfficer.status,
+      pin_code: cleanPin,
+      status: defaultStatus,
       warnings: 0
     };
+
     const localItem = { id: crypto.randomUUID(), ...payload };
     setOfficers((prev) => [...prev, localItem].sort((a, b) => b.rank_level - a.rank_level));
-    setNewOfficer({ badge_number: '', roblox_nick: '', rp_name: '', rank_level: 1, pin_code: '1234', status: 'Em Formação' });
+    setRecruitFeedback({
+      type: 'success',
+      badge: cleanBadge,
+      rpName: cleanRpName,
+      nick: cleanNick,
+      rankName: rankObj.name,
+      status: defaultStatus,
+      pin: cleanPin
+    });
+
+    setNewOfficer({
+      badge_number: '',
+      roblox_nick: '',
+      rp_name: '',
+      rank_level: 1,
+      pin_code: '1234',
+      status: 'Em Formação'
+    });
 
     if (isSupabaseConfigured && supabase) {
       const { data } = await supabase.from('pm_officers').insert([payload]).select().single();
@@ -1252,7 +1318,7 @@ export default function App() {
                   CENTRAL DE COMANDO — {currentUser.rank_name.toUpperCase()}
                 </div>
                 <p className="text-xs text-slate-300 mt-1">
-                  Gestão administrativa do efetivo, promoções, advertências e pasta de relatórios. A auditoria de turnos fica em <strong>Ponto & Patrulha</strong>.
+                  Pasta de relatórios, incorporação de recrutas/policiais e alertas do comando. A auditoria de turnos fica em <strong>Ponto & Patrulha</strong> e o prontuário completo do efetivo em <strong>Hierarquia & Comunicados</strong>.
                 </p>
               </div>
               <div className="flex gap-3">
@@ -1471,166 +1537,166 @@ export default function App() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                <h2 className="text-base font-bold text-white flex items-center gap-2 mb-4">
-                  <ShieldAlert className="w-5 h-5 text-amber-400" />
-                  Prontuário Completo do Efetivo & Credenciais
-                </h2>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-800 text-[11px] uppercase text-slate-400">
-                        <th className="py-2 px-3">Matrícula</th>
-                        <th className="py-2 px-3">Policial / Nick</th>
-                        <th className="py-2 px-3">Patente</th>
-                        <th className="py-2 px-3">PIN Acesso</th>
-                        <th className="py-2 px-3">Adv.</th>
-                        <th className="py-2 px-3">Ações Comando</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/70 text-xs">
-                      {officers.map((off) => (
-                        <tr key={off.id} className="hover:bg-slate-800/40">
-                          <td className="py-3 px-3 font-mono font-bold text-blue-400">{off.badge_number}</td>
-                          <td className="py-3 px-3">
-                            <div className="font-bold text-white">{off.rp_name}</div>
-                            <div className="text-[11px] text-slate-400">@{off.roblox_nick} • {off.status}</div>
-                          </td>
-                          <td className="py-3 px-3">
-                            <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                              off.rank_level >= 4
-                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                                : off.rank_level === 3
-                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                : 'bg-blue-500/15 text-blue-300'
-                            }`}>
-                              {off.rank_name}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 font-mono text-amber-300">{off.pin_code}</td>
-                          <td className="py-3 px-3 font-mono font-bold text-red-400">{off.warnings || 0}</td>
-                          <td className="py-3 px-3">
-                            <div className="flex items-center gap-1">
-                              {isTopCommand && (
-                                <>
-                                  <button
-                                    onClick={() => handleChangeOfficerRank(off, 1)}
-                                    className="px-2 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 text-[10px] font-bold"
-                                  >
-                                    +Patente
-                                  </button>
-                                  <button
-                                    onClick={() => handleChangeOfficerRank(off, -1)}
-                                    className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px]"
-                                  >
-                                    -Patente
-                                  </button>
-                                </>
-                              )}
-                              <button
-                                onClick={() => handleToggleOfficerWarning(off, 1)}
-                                className="px-2 py-1 rounded bg-red-600/20 hover:bg-red-600/40 text-red-300 text-[10px] font-bold"
-                              >
-                                +Adv
-                              </button>
-                              {isTopCommand && (
-                                <button
-                                  onClick={() =>
-                                    handleUpdateOfficerStatus(
-                                      off,
-                                      off.status === 'Suspenso' ? 'Ativo' : 'Suspenso'
-                                    )
-                                  }
-                                  className="px-2 py-1 rounded bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 text-[10px]"
-                                >
-                                  {off.status === 'Suspenso' ? 'Reativar' : 'Suspender'}
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Plus className="w-5 h-5 text-emerald-400" />
+                    Incorporar Policial / Recruta
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Cadastre novos recrutas ou policiais com matrícula automática, patente, situação funcional e PIN de acesso.
+                  </p>
                 </div>
+                <span className="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-emerald-300">
+                  Próxima sugestão: {nextSuggestedBadge}
+                </span>
               </div>
 
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
-                  <Plus className="w-5 h-5 text-emerald-400" />
-                  Incorporar Policial / Recruta
-                </h3>
-                <form onSubmit={handleAddOfficer} className="space-y-3 text-xs">
-                  <div>
-                    <label className="block text-slate-400 mb-1">Matrícula Funcional</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ex: PM-007"
-                      value={newOfficer.badge_number}
-                      onChange={(e) => setNewOfficer({ ...newOfficer, badge_number: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 mb-1">Nick Roblox / Discord</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ex: danielscruz50"
-                      value={newOfficer.roblox_nick}
-                      onChange={(e) => setNewOfficer({ ...newOfficer, roblox_nick: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 mb-1">Nome de Guerra (RP)</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ex: Rec. Daniel Cruz"
-                      value={newOfficer.rp_name}
-                      onChange={(e) => setNewOfficer({ ...newOfficer, rp_name: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-slate-400 mb-1">Patente Inicial</label>
-                      <select
-                        value={newOfficer.rank_level}
-                        onChange={(e) => setNewOfficer({ ...newOfficer, rank_level: Number(e.target.value) })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
-                      >
-                        {RANKS.map((r) => (
-                          <option key={r.level} value={r.level}>
-                            {r.name}
-                          </option>
-                        ))}
-                      </select>
+              {recruitFeedback && (
+                <div
+                  className={`mb-4 p-3.5 rounded-xl border text-xs flex items-start justify-between gap-3 ${
+                    recruitFeedback.type === 'success'
+                      ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-200'
+                      : 'bg-rose-500/10 border-rose-500/35 text-rose-200'
+                  }`}
+                >
+                  {recruitFeedback.type === 'success' ? (
+                    <div className="space-y-1">
+                      <div className="font-bold text-emerald-300">
+                        Integrante incorporado com sucesso!
+                      </div>
+                      <div className="text-slate-300">
+                        <strong>{recruitFeedback.rpName}</strong> (@{recruitFeedback.nick}) • Matrícula{' '}
+                        <strong className="font-mono text-blue-300">{recruitFeedback.badge}</strong> •{' '}
+                        {recruitFeedback.rankName} ({recruitFeedback.status}) • PIN{' '}
+                        <strong className="font-mono text-amber-300">{recruitFeedback.pin}</strong>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-slate-400 mb-1">PIN de Login</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="1234"
-                        value={newOfficer.pin_code}
-                        onChange={(e) => setNewOfficer({ ...newOfficer, pin_code: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono"
-                      />
-                    </div>
+                  ) : (
+                    <span>{recruitFeedback.text}</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setRecruitFeedback(null)}
+                    className="text-slate-400 hover:text-white p-0.5"
+                    aria-label="Fechar aviso"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              <form onSubmit={handleAddOfficer} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-400">Matrícula Funcional</label>
+                    <button
+                      type="button"
+                      onClick={() => setNewOfficer((prev) => ({ ...prev, badge_number: nextSuggestedBadge }))}
+                      className="text-[10px] font-mono text-emerald-400 hover:underline"
+                    >
+                      Usar {nextSuggestedBadge}
+                    </button>
                   </div>
+                  <input
+                    type="text"
+                    placeholder={nextSuggestedBadge}
+                    value={newOfficer.badge_number}
+                    onChange={(e) => setNewOfficer({ ...newOfficer, badge_number: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono uppercase"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Nick Roblox / Discord</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: danielscruz50"
+                    value={newOfficer.roblox_nick}
+                    onChange={(e) => setNewOfficer({ ...newOfficer, roblox_nick: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Nome de Guerra (RP)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Rec. Daniel Cruz"
+                    value={newOfficer.rp_name}
+                    onChange={(e) => setNewOfficer({ ...newOfficer, rp_name: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Patente Inicial</label>
+                  <select
+                    value={newOfficer.rank_level}
+                    onChange={(e) => {
+                      const lvl = Number(e.target.value);
+                      setNewOfficer((prev) => ({
+                        ...prev,
+                        rank_level: lvl,
+                        status: lvl === 1 ? 'Em Formação' : 'Ativo'
+                      }));
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-white"
+                  >
+                    {RANKS.map((r) => (
+                      <option key={r.level} value={r.level}>
+                        {r.name} (Nível {r.level})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 mb-1">Situação Funcional</label>
+                  <select
+                    value={newOfficer.status}
+                    onChange={(e) => setNewOfficer({ ...newOfficer, status: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 text-white"
+                  >
+                    <option value="Em Formação">Em Formação</option>
+                    <option value="Ativo">Ativo</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-400">PIN de Login</label>
+                    <button
+                      type="button"
+                      onClick={handleGeneratePin}
+                      className="text-[10px] font-semibold text-amber-300 hover:underline flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3" /> Gerar PIN
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    placeholder="1234"
+                    value={newOfficer.pin_code}
+                    onChange={(e) => setNewOfficer({ ...newOfficer, pin_code: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono"
+                  />
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 pt-1">
                   <button
                     type="submit"
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition mt-2"
+                    className="w-full sm:w-auto px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-2"
                   >
-                    Cadastrar no Efetivo PM
+                    <Plus className="w-4 h-4" />
+                    Incorporar ao Efetivo PM
                   </button>
-                </form>
-              </div>
+                </div>
+              </form>
             </div>
           </div>
         )}
@@ -2552,76 +2618,165 @@ export default function App() {
         )}
 
         {activeTab === 'hierarquia' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-              <h2 className="text-base font-bold text-white flex items-center gap-2 mb-2">
-                <Shield className="w-5 h-5 text-blue-400" />
-                Hierarquia Oficial — Polícia Militar de Pantanória
-              </h2>
-              {RANKS.map((r) => (
-                <div key={r.level} className="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-white">
-                      {6 - r.level}. {r.name}
-                    </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/15 text-blue-300">
-                      Nível {r.level}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1">{r.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              {isHighCommand && (
-                <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-5">
-                  <h3 className="text-sm font-bold text-amber-300 mb-3">
-                    Publicar Comunicado ou Parametrização (Alto Comando)
-                  </h3>
-                  <form onSubmit={handleAddAnnouncement} className="space-y-2.5 text-xs">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Título (ex: PARAMETRIZAÇÃO — RECRUTA...)"
-                      value={newAnnouncement.title}
-                      onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
-                    />
-                    <textarea
-                      rows={3}
-                      required
-                      placeholder="Texto oficial do comunicado..."
-                      value={newAnnouncement.content}
-                      onChange={(e) => setNewAnnouncement({ ...newAnnouncement, content: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white"
-                    />
-                    <button
-                      type="submit"
-                      className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl"
-                    >
-                      Publicar no Mural Oficial
-                    </button>
-                  </form>
-                </div>
-              )}
-
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <Megaphone className="w-5 h-5 text-blue-400" />
-                  Mural de Comunicados & Parametrizações
+                <h2 className="text-base font-bold text-white flex items-center gap-2 mb-2">
+                  <Shield className="w-5 h-5 text-blue-400" />
+                  Hierarquia Oficial — Polícia Militar de Pantanória
                 </h2>
-                {announcements.map((a) => (
-                  <div key={a.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-1.5">
-                    <div className="text-xs font-extrabold text-blue-400">{a.title}</div>
-                    <p className="text-xs text-slate-300 leading-relaxed">{a.content}</p>
-                    <div className="text-[10px] text-slate-500 pt-1">
-                      Comando da Polícia Militar • @{a.author_nick} • {formatDateTime(a.created_at)}
+                {RANKS.map((r) => (
+                  <div key={r.level} className="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm text-white">
+                        {6 - r.level}. {r.name}
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/15 text-blue-300">
+                        Nível {r.level}
+                      </span>
                     </div>
+                    <p className="text-xs text-slate-400 mt-1">{r.desc}</p>
                   </div>
                 ))}
               </div>
+
+              <div className="space-y-4">
+                {isHighCommand && (
+                  <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-5">
+                    <h3 className="text-sm font-bold text-amber-300 mb-3">
+                      Publicar Comunicado ou Parametrização (Alto Comando)
+                    </h3>
+                    <form onSubmit={handleAddAnnouncement} className="space-y-2.5 text-xs">
+                      <input
+                        type="text"
+                        required
+                        placeholder="Título (ex: PARAMETRIZAÇÃO — RECRUTA...)"
+                        value={newAnnouncement.title}
+                        onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                      />
+                      <textarea
+                        rows={3}
+                        required
+                        placeholder="Texto oficial do comunicado..."
+                        value={newAnnouncement.content}
+                        onChange={(e) => setNewAnnouncement({ ...newAnnouncement, content: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white"
+                      />
+                      <button
+                        type="submit"
+                        className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl"
+                      >
+                        Publicar no Mural Oficial
+                      </button>
+                    </form>
+                  </div>
+                )}
+
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                  <h2 className="text-base font-bold text-white flex items-center gap-2">
+                    <Megaphone className="w-5 h-5 text-blue-400" />
+                    Mural de Comunicados & Parametrizações
+                  </h2>
+                  {announcements.map((a) => (
+                    <div key={a.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-1.5">
+                      <div className="text-xs font-extrabold text-blue-400">{a.title}</div>
+                      <p className="text-xs text-slate-300 leading-relaxed">{a.content}</p>
+                      <div className="text-[10px] text-slate-500 pt-1">
+                        Comando da Polícia Militar • @{a.author_nick} • {formatDateTime(a.created_at)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+
+            {isHighCommand && (
+              <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-5">
+                <h2 className="text-base font-bold text-white flex items-center gap-2 mb-4">
+                  <ShieldAlert className="w-5 h-5 text-amber-400" />
+                  Prontuário Completo do Efetivo & Credenciais
+                </h2>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-[11px] uppercase text-slate-400">
+                        <th className="py-2 px-3">Matrícula</th>
+                        <th className="py-2 px-3">Policial / Nick</th>
+                        <th className="py-2 px-3">Patente</th>
+                        <th className="py-2 px-3">PIN Acesso</th>
+                        <th className="py-2 px-3">Adv.</th>
+                        <th className="py-2 px-3">Ações Comando</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/70 text-xs">
+                      {officers.map((off) => (
+                        <tr key={off.id} className="hover:bg-slate-800/40">
+                          <td className="py-3 px-3 font-mono font-bold text-blue-400">{off.badge_number}</td>
+                          <td className="py-3 px-3">
+                            <div className="font-bold text-white">{off.rp_name}</div>
+                            <div className="text-[11px] text-slate-400">@{off.roblox_nick} • {off.status}</div>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                              off.rank_level >= 4
+                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                : off.rank_level === 3
+                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                                : 'bg-blue-500/15 text-blue-300'
+                            }`}>
+                              {off.rank_name}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 font-mono text-amber-300">{off.pin_code}</td>
+                          <td className="py-3 px-3 font-mono font-bold text-red-400">{off.warnings || 0}</td>
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-1">
+                              {isTopCommand && (
+                                <>
+                                  <button
+                                    onClick={() => handleChangeOfficerRank(off, 1)}
+                                    className="px-2 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 text-[10px] font-bold"
+                                  >
+                                    +Patente
+                                  </button>
+                                  <button
+                                    onClick={() => handleChangeOfficerRank(off, -1)}
+                                    className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px]"
+                                  >
+                                    -Patente
+                                  </button>
+                                </>
+                              )}
+                              <button
+                                onClick={() => handleToggleOfficerWarning(off, 1)}
+                                className="px-2 py-1 rounded bg-red-600/20 hover:bg-red-600/40 text-red-300 text-[10px] font-bold"
+                              >
+                                +Adv
+                              </button>
+                              {isTopCommand && (
+                                <button
+                                  onClick={() =>
+                                    handleUpdateOfficerStatus(
+                                      off,
+                                      off.status === 'Suspenso' ? 'Ativo' : 'Suspenso'
+                                    )
+                                  }
+                                  className="px-2 py-1 rounded bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 text-[10px]"
+                                >
+                                  {off.status === 'Suspenso' ? 'Reativar' : 'Suspender'}
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
