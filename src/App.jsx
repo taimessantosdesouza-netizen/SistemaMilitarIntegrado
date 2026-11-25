@@ -367,6 +367,25 @@ export default function App() {
   const [shiftSummary, setShiftSummary] = useState('');
   const [nowTick, setNowTick] = useState(Date.now());
 
+  const [shiftFines, setShiftFines] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sigp_pantanoria_shift_fines');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [fineTarget, setFineTarget] = useState('');
+  const [fineFeedback, setFineFeedback] = useState('');
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sigp_pantanoria_shift_fines', JSON.stringify(shiftFines));
+    } catch {
+      // ignora erro de armazenamento local
+    }
+  }, [shiftFines]);
+
   const [citizenSearch, setCitizenSearch] = useState('');
   const [newCitizen, setNewCitizen] = useState({ passport: '', rp_name: '', roblox_nick: '', phone: '', cnh_status: 'Válida', gun_license: false, wanted_status: 'Limpo' });
   const [crimeInput, setCrimeInput] = useState({});
@@ -527,6 +546,11 @@ export default function App() {
     [bmDutyLogs]
   );
 
+  const activeShiftFines = useMemo(() => {
+    if (!activeShift) return [];
+    return shiftFines.filter((f) => f.shiftId === activeShift.id);
+  }, [shiftFines, activeShift]);
+
   const handleSelectCorps = (corps) => {
     setSelectedCorps(corps);
     localStorage.setItem('sigp_pantanoria_selected_corps', corps);
@@ -614,8 +638,79 @@ export default function App() {
       const { data } = await supabase.from('pm_duty_logs').insert([payload]).select().single();
       if (data) {
         setDutyLogs((prev) => prev.map((item) => (item.id === newLog.id ? data : item)));
+        setShiftFines((prev) =>
+          prev.map((f) => (f.shiftId === newLog.id ? { ...f, shiftId: data.id } : f))
+        );
       }
     }
+  };
+
+  const handleRegisterShiftFine = async () => {
+    if (!currentUser || selectedArticles.length === 0) return;
+
+    if (!activeShift) {
+      setFineFeedback('Inicie o ponto em "Ponto & Patrulha" antes de registrar uma multa no turno.');
+      return;
+    }
+
+    const chosen = PENAL_ARTICLES.filter((a) => selectedArticles.includes(a.id));
+    const nowIso = new Date().toISOString();
+    const targetClean = fineTarget.trim();
+
+    const entries = chosen.map((art) => ({
+      id: crypto.randomUUID(),
+      shiftId: activeShift.id,
+      officerNick: currentUser.roblox_nick,
+      artCode: art.code,
+      artName: art.name,
+      fine: art.fine,
+      months: art.months,
+      target: targetClean || 'Não informado',
+      createdAt: nowIso,
+    }));
+
+    setShiftFines((prev) => [...entries, ...prev]);
+
+    let infopenMatchedName = '';
+    if (targetClean) {
+      const normalizedTarget = targetClean.toLowerCase();
+      const matchedCitizen = citizens.find(
+        (c) =>
+          normalizedTarget.includes(c.passport.toLowerCase()) ||
+          normalizedTarget.includes(c.rp_name.toLowerCase()) ||
+          (c.roblox_nick && normalizedTarget.includes(c.roblox_nick.toLowerCase()))
+      );
+
+      if (matchedCitizen) {
+        infopenMatchedName = matchedCitizen.rp_name;
+        const todayStr = new Date().toLocaleDateString('pt-BR');
+        const newCrimeRecords = chosen.map((art) => ({
+          date: todayStr,
+          crime: `Multa/Autuação: ${art.code} — ${art.name} ($${art.fine.toLocaleString()})`,
+          officer: `@${currentUser.roblox_nick}`,
+        }));
+        const updatedRecords = [...newCrimeRecords, ...(matchedCitizen.criminal_records || [])];
+
+        setCitizens((prev) =>
+          prev.map((c) => (c.id === matchedCitizen.id ? { ...c, criminal_records: updatedRecords } : c))
+        );
+
+        if (isSupabaseConfigured && supabase) {
+          await supabase
+            .from('pm_citizens')
+            .update({ criminal_records: updatedRecords })
+            .eq('id', matchedCitizen.id);
+        }
+      }
+    }
+
+    setFineTarget('');
+    setSelectedArticles([]);
+    setFineFeedback(
+      infopenMatchedName
+        ? `${entries.length} multa(s) vinculada(s) ao turno atual e averbada(s) no INFOPEN de ${infopenMatchedName}.`
+        : `${entries.length} multa(s) vinculada(s) ao turno atual. Entrarão nas observações ao encerrar o ponto.`
+    );
   };
 
   const handleEndShift = async () => {
@@ -626,16 +721,34 @@ export default function App() {
       Math.floor((new Date(endedAt).getTime() - new Date(activeShift.started_at).getTime()) / 1000)
     );
 
+    const finesInThisShift = shiftFines.filter((f) => f.shiftId === activeShift.id);
+    const finesSummaryText =
+      finesInThisShift.length > 0
+        ? `Multas aplicadas (${finesInThisShift.length}): ` +
+          finesInThisShift
+            .map(
+              (f) =>
+                `${f.artCode} — ${f.artName} ($${f.fine.toLocaleString()} | Alvo: ${f.target})`
+            )
+            .join(' | ')
+        : '';
+
+    const manualNotes = shiftSummary.trim();
+    const combinedNotes =
+      [manualNotes, finesSummaryText].filter(Boolean).join(' • ') ||
+      'Patrulhamento concluído sem alterações extraordinárias.';
+
     const updated = {
       ...activeShift,
       ended_at: endedAt,
       duration_seconds: durationSec,
       status: 'ENCERRADO',
-      summary_notes: shiftSummary || 'Patrulhamento concluído sem alterações extraordinárias.'
+      summary_notes: combinedNotes
     };
 
     setDutyLogs((prev) => prev.map((item) => (item.id === activeShift.id ? updated : item)));
     setShiftSummary('');
+    setFineFeedback('');
 
     if (isSupabaseConfigured && supabase) {
       await supabase
@@ -1357,6 +1470,11 @@ export default function App() {
                 <span className="text-xs font-mono font-bold text-emerald-300">
                   {formatDuration(elapsedSeconds)}
                 </span>
+                {activeShiftFines.length > 0 && (
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/35">
+                    {activeShiftFines.length} multa(s)
+                  </span>
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl">
@@ -1415,7 +1533,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Barra de navegação com quebra de linha limpa (sem barra de rolagem horizontal cortando abas) */}
         <div className="max-w-7xl mx-auto px-4 pb-2.5 pt-1 flex flex-wrap items-center gap-1.5">
           {isHighCommand && (
             <button
@@ -1772,6 +1889,7 @@ export default function App() {
                       <select
                         value={cmdReportFilterStatus}
                         onChange={(e) => setCmdReportFilterStatus(e.target.value)}
+                        style={{ colorScheme: 'dark' }}
                         className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
                       >
                         <option value="PENDENTE">Somente Pendentes</option>
@@ -1941,6 +2059,7 @@ export default function App() {
                 <select
                   value={newOfficer.rank_level}
                   onChange={(e) => setNewOfficer({ ...newOfficer, rank_level: Number(e.target.value) })}
+                  style={{ colorScheme: 'dark' }}
                   className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
                 >
                   {RANKS.map((r) => (
@@ -1978,7 +2097,7 @@ export default function App() {
                     Controle de Ponto Eletrônico
                   </h2>
                   <p className="text-xs text-slate-400">
-                    Registre o início e o término do seu patrulhamento. Horários salvos automaticamente com data e hora exatas.
+                    Registre o início e o término do seu patrulhamento. Multas aplicadas durante o turno entram automaticamente nas observações ao encerrar.
                   </p>
                 </div>
 
@@ -1990,6 +2109,7 @@ export default function App() {
                         <select
                           value={vtrPrefix}
                           onChange={(e) => setVtrPrefix(e.target.value)}
+                          style={{ colorScheme: 'dark' }}
                           className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white"
                         >
                           <option value="Caracterizada">Viatura Caracterizada</option>
@@ -2046,6 +2166,32 @@ export default function App() {
                       />
                     </div>
 
+                    {activeShiftFines.length > 0 && (
+                      <div className="bg-slate-950/90 border border-amber-500/35 rounded-xl p-3.5 space-y-2 text-xs">
+                        <div className="flex items-center justify-between text-amber-300 font-bold">
+                          <span>Multas registradas neste turno ({activeShiftFines.length})</span>
+                          <span className="font-mono text-emerald-400">
+                            ${activeShiftFines.reduce((acc, f) => acc + f.fine, 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <ul className="space-y-1 text-slate-300">
+                          {activeShiftFines.map((f) => (
+                            <li key={f.id} className="flex justify-between gap-2 text-[11px]">
+                              <span>
+                                • <strong>{f.artCode}</strong> — {f.artName} (Alvo: {f.target})
+                              </span>
+                              <span className="font-mono text-emerald-400 shrink-0">
+                                ${f.fine.toLocaleString()}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="text-[11px] text-slate-400 pt-1">
+                          Estas autuações serão anexadas automaticamente às observações ao encerrar o serviço.
+                        </p>
+                      </div>
+                    )}
+
                     <button
                       onClick={handleEndShift}
                       className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-rose-950"
@@ -2065,28 +2211,35 @@ export default function App() {
                       .map((log) => (
                         <div
                           key={log.id}
-                          className="bg-slate-950 border border-slate-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs"
+                          className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2 text-xs"
                         >
-                          <div>
-                            <div className="font-semibold text-white">
-                              {log.vtr_prefix} • {log.patrol_area}
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <div className="font-semibold text-white">
+                                {log.vtr_prefix} • {log.patrol_area}
+                              </div>
+                              <div className="text-slate-400 font-mono text-[11px]">
+                                Início: {formatDateTime(log.started_at)} | Fim: {log.ended_at ? formatDateTime(log.ended_at) : 'Ativo'}
+                              </div>
                             </div>
-                            <div className="text-slate-400 font-mono text-[11px]">
-                              Início: {formatDateTime(log.started_at)} | Fim: {log.ended_at ? formatDateTime(log.ended_at) : 'Ativo'}
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-emerald-400">
+                                {formatDuration(log.duration_seconds)}
+                              </span>
+                              <button
+                                onClick={() => copyDiscordFormat(formatDutyForDiscord(log), log.id)}
+                                className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1"
+                              >
+                                {copiedId === log.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                Discord
+                              </button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-bold text-emerald-400">
-                              {formatDuration(log.duration_seconds)}
-                            </span>
-                            <button
-                              onClick={() => copyDiscordFormat(formatDutyForDiscord(log), log.id)}
-                              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1"
-                            >
-                              {copiedId === log.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                              Discord
-                            </button>
-                          </div>
+                          {log.summary_notes && (
+                            <div className="text-[11px] text-slate-300 bg-slate-900/90 border border-slate-800/80 rounded-lg px-2.5 py-1.5">
+                              <strong className="text-slate-400">Observações:</strong> {log.summary_notes}
+                            </div>
+                          )}
                         </div>
                       ))}
                   </div>
@@ -2133,7 +2286,7 @@ export default function App() {
                       Auditoria Completa de Turnos / Ponto ({dutyLogs.length} registros)
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Acompanhe horários exatos de entrada, saída e tempo patrulhado de cada policial.
+                      Acompanhe horários exatos de entrada, saída, tempo patrulhado e observações/multas de cada policial.
                     </p>
                   </div>
 
@@ -2141,6 +2294,7 @@ export default function App() {
                     <select
                       value={dutyFilterOfficer}
                       onChange={(e) => setDutyFilterOfficer(e.target.value)}
+                      style={{ colorScheme: 'dark' }}
                       className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
                     >
                       <option value="TODOS">Todos os Policiais</option>
@@ -2154,6 +2308,7 @@ export default function App() {
                     <select
                       value={dutyFilterStatus}
                       onChange={(e) => setDutyFilterStatus(e.target.value)}
+                      style={{ colorScheme: 'dark' }}
                       className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
                     >
                       <option value="TODOS">Todos os Status</option>
@@ -2173,6 +2328,7 @@ export default function App() {
                         <th className="py-2.5 px-3">Início do Turno</th>
                         <th className="py-2.5 px-3">Término do Turno</th>
                         <th className="py-2.5 px-3">Tempo Patrulhado</th>
+                        <th className="py-2.5 px-3">Observações / Multas</th>
                         <th className="py-2.5 px-3">Status</th>
                       </tr>
                     </thead>
@@ -2207,6 +2363,9 @@ export default function App() {
                             </td>
                             <td className="py-3 px-3 font-mono font-bold text-white">
                               {formatDuration(liveSec)}
+                            </td>
+                            <td className="py-3 px-3 text-slate-300 max-w-xs">
+                              {log.summary_notes || '—'}
                             </td>
                             <td className="py-3 px-3">
                               {log.status === 'EM_SERVICO' ? (
@@ -2272,6 +2431,7 @@ export default function App() {
                         <select
                           value={cit.wanted_status}
                           onChange={(e) => handleUpdateCitizenStatus(cit, e.target.value)}
+                          style={{ colorScheme: 'dark' }}
                           className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${
                             cit.wanted_status === 'Procurado'
                               ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
@@ -2370,6 +2530,7 @@ export default function App() {
                     <select
                       value={newCitizen.cnh_status}
                       onChange={(e) => setNewCitizen({ ...newCitizen, cnh_status: e.target.value })}
+                      style={{ colorScheme: 'dark' }}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
                     >
                       <option value="Válida">Válida</option>
@@ -2382,6 +2543,7 @@ export default function App() {
                     <select
                       value={newCitizen.wanted_status}
                       onChange={(e) => setNewCitizen({ ...newCitizen, wanted_status: e.target.value })}
+                      style={{ colorScheme: 'dark' }}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
                     >
                       <option value="Limpo">Limpo</option>
@@ -2446,6 +2608,7 @@ export default function App() {
                     <select
                       value={veh.status}
                       onChange={(e) => handleUpdateVehicleStatus(veh, e.target.value)}
+                      style={{ colorScheme: 'dark' }}
                       className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${
                         veh.status === 'Roubado/Furtado'
                           ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
@@ -2510,6 +2673,7 @@ export default function App() {
                 <select
                   value={newVehicle.status}
                   onChange={(e) => setNewVehicle({ ...newVehicle, status: e.target.value })}
+                  style={{ colorScheme: 'dark' }}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
                 >
                   <option value="Regular">Regular</option>
@@ -2548,6 +2712,7 @@ export default function App() {
                     <select
                       value={newReport.incident_code}
                       onChange={(e) => setNewReport({ ...newReport, incident_code: e.target.value })}
+                      style={{ colorScheme: 'dark' }}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
                     >
                       <option value="Código 1">Código 1 (Patrulha)</option>
@@ -2628,6 +2793,7 @@ export default function App() {
                     <select
                       value={newReport.outcome}
                       onChange={(e) => setNewReport({ ...newReport, outcome: e.target.value })}
+                      style={{ colorScheme: 'dark' }}
                       className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
                     >
                       <option value="Preso">Preso</option>
@@ -2664,6 +2830,7 @@ export default function App() {
                 <select
                   value={reportFilterStatus}
                   onChange={(e) => setReportFilterStatus(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
                   className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
                 >
                   <option value="TODOS">Todos os Status</option>
@@ -2841,7 +3008,7 @@ export default function App() {
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-fit space-y-4">
-              <h3 className="text-base font-bold text-white">Resumo da Pena</h3>
+              <h3 className="text-base font-bold text-white">Resumo da Pena & Registro no Ponto</h3>
               <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">Artigos selecionados:</span>
@@ -2866,8 +3033,48 @@ export default function App() {
                   </span>
                 </div>
               </div>
+
+              <div className="pt-2 border-t border-slate-800 space-y-2.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-300 font-semibold">
+                    Passaporte, Nome ou Placa do Autuado
+                  </label>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                    activeShift
+                      ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                      : 'bg-slate-800 text-slate-400'
+                  }`}>
+                    {activeShift ? 'Ponto Ativo' : 'Ponto Fechado'}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Ex: PTN-1001, Nickolas Silva ou PTN-9X88"
+                  value={fineTarget}
+                  onChange={(e) => setFineTarget(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                />
+                <button
+                  type="button"
+                  disabled={penaltySummary.count === 0}
+                  onClick={handleRegisterShiftFine}
+                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:pointer-events-none text-white font-bold transition"
+                >
+                  Aplicar Multa e Registrar no Turno
+                </button>
+                {fineFeedback && (
+                  <p className="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2.5">
+                    {fineFeedback}
+                  </p>
+                )}
+              </div>
+
               <button
-                onClick={() => setSelectedArticles([])}
+                type="button"
+                onClick={() => {
+                  setSelectedArticles([]);
+                  setFineFeedback('');
+                }}
                 className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
               >
                 Limpar Seleção
