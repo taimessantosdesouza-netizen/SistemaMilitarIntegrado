@@ -1,0 +1,212 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f3f4f6;
+  color: #111827;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-header {
+  background: #7f1d1d;
+  color: #ffffff;
+  border-bottom: 3px solid #dc2626;
+  padding: 18px 24px;
+}
+
+.portal-header-inner {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.portal-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #fecaca;
+}
+
+.portal-header h1 {
+  font-size: 1.25rem;
+  font-weight: 900;
+  margin-top: 2px;
+}
+
+.portal-main {
+  flex: 1 0 auto;
+  max-width: 860px;
+  width: 100%;
+  margin: 28px auto;
+  padding: 0 18px;
+}
+
+.access-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.access-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.access-card--bombeiros {
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 60%);
+  border: 2px solid #dc2626;
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.14);
+}
+
+.access-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+
+.badge--red {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.badge--blue {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.corp-code {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #6b7280;
+}
+
+.access-card-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.corp-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.corp-icon--red {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.corp-icon--blue {
+  background: #1e3a8a;
+  color: #ffffff;
+}
+
+.corp-info h2 {
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.access-card--bombeiros .corp-info h2 {
+  color: #991b1b;
+}
+
+.access-card--pm .corp-info h2 {
+  color: #1e3a8a;
+}
+
+.corp-info p {
+  font-size: 0.9rem;
+  color: #4b5563;
+  margin-top: 4px;
+}
+
+.access-card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-enter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-decoration: none;
+  color: #ffffff;
+  transition: background 0.15s ease;
+}
+
+.btn-enter--red {
+  background: #dc2626;
+}
+
+.btn-enter--red:hover {
+  background: #991b1b;
+}
+
+.btn-enter--blue {
+  background: #1e3a8a;
+}
+
+.btn-enter--blue:hover {
+  background: #1d4ed8;
+}
+
+.portal-footer {
+  margin-top: auto;
+  background: #111827;
+  color: #9ca3af;
+  border-top: 2px solid #dc2626;
+  padding: 16px 24px;
+  font-size: 0.82rem;
+}
+
+.portal-footer-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .access-card-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-enter {
+    width: 100%;
+  }
+}
