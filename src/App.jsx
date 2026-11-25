@@ -969,8 +969,6 @@ export default function App() {
       created_at: new Date().toISOString()
     };
 
-    // Só confirma o envio após a gravação remota. Assim, falhas não criam
-    // relatórios fantasmas na lista nem apagam os dados preenchidos no formulário.
     let savedReport = { id: crypto.randomUUID(), ...payload };
     if (isSupabaseConfigured && supabase) {
       const { data, error } = await supabase.from('pm_reports').insert([payload]).select().single();
@@ -3293,159 +3291,132 @@ export default function App() {
         )}
 
         {activeTab === 'hierarquia' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-                <h2 className="text-base font-bold text-white flex items-center gap-2 mb-2">
-                  <Shield className="w-5 h-5 text-blue-400" />
-                  Hierarquia Oficial — Polícia Militar de Pantanória
-                </h2>
-                {RANKS.map((r) => (
-                  <div key={r.level} className="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm text-white">
-                        {6 - r.level}. {r.name}
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/15 text-blue-300">
-                        Nível {r.level}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-1">{r.desc}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-4">
-                {isHighCommand && (
-                  <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-5">
-                    <h3 className="text-sm font-bold text-amber-300 mb-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <div className="space-y-5">
+              {isHighCommand && (
+                <div className="bg-slate-900/95 border border-amber-500/30 rounded-2xl p-5 shadow-lg shadow-black/25">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <h3 className="text-sm font-bold text-amber-300 flex items-center gap-2">
+                      <Megaphone className="w-4 h-4 text-amber-400" />
                       Publicar Nota / Parametrização no Mural
                     </h3>
-                    <form onSubmit={handleAddAnnouncement} className="space-y-2.5 text-xs">
-                      <input
-                        type="text"
-                        required
-                        placeholder="Título (Ex: PARAMETRIZAÇÃO — RECRUTA...)"
-                        value={newAnnouncement.title}
-                        onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
-                      />
-                      <textarea
-                        rows={3}
-                        required
-                        placeholder="Texto oficial da publicação..."
-                        value={newAnnouncement.content}
-                        onChange={(e) => setNewAnnouncement({ ...newAnnouncement, content: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white"
-                      />
-                      <button
-                        type="submit"
-                        className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-xl"
-                      >
-                        Publicar no Mural
-                      </button>
-                    </form>
+                    <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      Comando
+                    </span>
                   </div>
-                )}
+                  <form onSubmit={handleAddAnnouncement} className="space-y-2.5 text-xs">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Título (Ex: PARAMETRIZAÇÃO — RECRUTA...)"
+                      value={newAnnouncement.title}
+                      onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/60 rounded-xl px-3.5 py-2.5 text-white focus:outline-none transition"
+                    />
+                    <textarea
+                      rows={3}
+                      required
+                      placeholder="Texto oficial da publicação..."
+                      value={newAnnouncement.content}
+                      onChange={(e) => setNewAnnouncement({ ...newAnnouncement, content: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/60 rounded-xl p-3 text-white focus:outline-none transition"
+                    />
+                    <button
+                      type="submit"
+                      className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl transition shadow-md shadow-amber-950/40"
+                    >
+                      Publicar no Mural
+                    </button>
+                  </form>
+                </div>
+              )}
 
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
-                    <Megaphone className="w-5 h-5 text-amber-400" />
+              <div className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border border-amber-500/35 rounded-2xl p-5 space-y-3.5 shadow-xl shadow-black/30">
+                <div className="flex items-center justify-between gap-2 border-b border-slate-800/90 pb-3">
+                  <h2 className="text-base font-extrabold text-white flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+                      <Megaphone className="w-4 h-4 text-amber-400" />
+                    </span>
                     Mural de Avisos & Parametrizações
                   </h2>
-                  {announcements.map((a) => (
-                    <div key={a.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-1.5">
-                      <div className="text-xs font-extrabold text-amber-400">{a.title}</div>
-                      <p className="text-xs text-slate-300 leading-relaxed">{a.content}</p>
-                      <div className="text-[10px] text-slate-500 pt-1">
-                        Publicado por @{a.author_nick} • {formatDateTime(a.created_at)}
-                      </div>
-                    </div>
-                  ))}
+                  <span className="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-950 text-amber-300 border border-slate-800">
+                    {announcements.length} {announcements.length === 1 ? 'nota' : 'notas'}
+                  </span>
                 </div>
+
+                {announcements.length === 0 ? (
+                  <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 text-xs text-slate-400">
+                    Nenhuma nota publicada no mural até o momento.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {announcements.map((a, idx) => (
+                      <article
+                        key={a.id}
+                        className={`rounded-xl p-4 space-y-2 border transition ${
+                          idx === 0
+                            ? 'bg-slate-950/95 border-amber-500/40 shadow-md shadow-amber-950/20'
+                            : 'bg-slate-950/75 border-slate-800/90 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-xs font-extrabold tracking-wide text-amber-400 uppercase">
+                            {a.title}
+                          </span>
+                          {idx === 0 && (
+                            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                              Recente
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-200 leading-relaxed whitespace-pre-line">
+                          {a.content}
+                        </p>
+                        <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-800/70 flex flex-wrap items-center justify-between gap-2">
+                          <span>
+                            Por <strong className="text-slate-300">@{a.author_nick}</strong>
+                          </span>
+                          <span className="font-mono text-[10px] text-slate-500">
+                            {formatDateTime(a.created_at)}
+                          </span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            {isHighCommand && (
-              <div className="bg-slate-900 border border-amber-500/30 rounded-2xl p-5">
-                <h2 className="text-base font-bold text-white flex items-center gap-2 mb-4">
-                  <ShieldAlert className="w-5 h-5 text-amber-400" />
-                  Prontuário Completo do Efetivo & Credenciais
+            <div className="bg-slate-900/95 border border-slate-800 rounded-2xl p-5 space-y-2.5 shadow-lg shadow-black/20">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-800/90 pb-3 mb-1">
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-blue-400" />
+                  </span>
+                  Hierarquia Oficial — PM Pantanória
                 </h2>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-800 text-[11px] uppercase text-slate-400">
-                        <th className="py-2 px-3">Matrícula</th>
-                        <th className="py-2 px-3">Policial / Nick</th>
-                        <th className="py-2 px-3">Patente</th>
-                        <th className="py-2 px-3">PIN Acesso</th>
-                        <th className="py-2 px-3">Adv.</th>
-                        <th className="py-2 px-3">Ações Comando</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/70 text-xs">
-                      {officers.map((off) => (
-                        <tr key={off.id} className="hover:bg-slate-800/40">
-                          <td className="py-3 px-3 font-mono font-bold text-blue-400">{off.badge_number}</td>
-                          <td className="py-3 px-3">
-                            <div className="font-bold text-white">{off.rp_name}</div>
-                            <div className="text-[11px] text-slate-400">@{off.roblox_nick} • {off.status}</div>
-                          </td>
-                          <td className="py-3 px-3">
-                            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-amber-300 border border-slate-700">
-                              {off.rank_name}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 font-mono text-slate-300">{off.pin_code}</td>
-                          <td className="py-3 px-3 font-mono font-bold text-rose-400">{off.warnings || 0}</td>
-                          <td className="py-3 px-3">
-                            <div className="flex items-center gap-1">
-                              {isTopCommand && (
-                                <>
-                                  <button
-                                    onClick={() => handleChangeOfficerRank(off, 1)}
-                                    className="px-2 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 text-[10px] font-bold"
-                                  >
-                                    +Patente
-                                  </button>
-                                  <button
-                                    onClick={() => handleChangeOfficerRank(off, -1)}
-                                    className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px]"
-                                  >
-                                    -Patente
-                                  </button>
-                                </>
-                              )}
-                              <button
-                                onClick={() => handleToggleOfficerWarning(off, 1)}
-                                className="px-2 py-1 rounded bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 text-[10px] font-bold"
-                              >
-                                +Adv
-                              </button>
-                              {isTopCommand && (
-                                <button
-                                  onClick={() =>
-                                    handleUpdateOfficerStatus(
-                                      off,
-                                      off.status === 'Suspenso' ? 'Ativo' : 'Suspenso'
-                                    )
-                                  }
-                                  className="px-2 py-1 rounded bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 text-[10px]"
-                                >
-                                  {off.status === 'Suspenso' ? 'Reativar' : 'Suspender'}
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                  {RANKS.length} Postos
+                </span>
               </div>
-            )}
+
+              {RANKS.map((r) => (
+                <div
+                  key={r.level}
+                  className="bg-slate-950/90 hover:bg-slate-950 border border-slate-800/90 hover:border-blue-500/30 rounded-xl px-3.5 py-3 transition"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-xs sm:text-sm text-white">
+                      {6 - r.level}. {r.name}
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/25 shrink-0">
+                      Nível {r.level}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1 leading-snug">{r.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </main>
