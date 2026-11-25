@@ -1,136 +1,104 @@
-import { useState } from "react";
-import { supabase } from "./lib/supabase";
+import React, { useState } from 'react';
+import { Flame, Shield, ArrowRight } from 'lucide-react';
+import BombeirosApp from './BombeirosApp';
+import PoliciaApp from './PoliciaApp';
 
 export default function App() {
-  const [selectedCorp, setSelectedCorp] = useState(null);
-  const [search, setSearch] = useState("");
-  const [records, setRecords] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const accesses = [
-    {
-      id: "bombeiros",
-      label: "ACESSO BOMBEIROS",
-      isFirefighter: true,
-      description: "Sistema do Corpo de Bombeiros — ocorrências, efetivo e boletins."
-    },
-    {
-      id: "policia-militar",
-      label: "ACESSO POLÍCIA MILITAR",
-      isFirefighter: false,
-      description: "Sistema da Polícia Militar — registros e consultas operacionais."
-    }
-  ];
-
-  async function handleOpenCorp(corp) {
-    setSelectedCorp(corp);
-    setLoading(true);
-    try {
-      if (supabase?.from) {
-        const { data } = await supabase
-          .from("bombeiros_registros")
-          .select("*")
-          .order("created_at", { ascending: false });
-        setRecords(Array.isArray(data) ? data : []);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const filteredRecords = records.filter((item) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return `${item.nome || ""} ${item.nome_guerra || ""} ${item.matricula || ""} ${item.grupamento || ""}`
-      .toLowerCase()
-      .includes(q);
+  const [selectedCorps, setSelectedCorps] = useState(() => {
+    const saved = localStorage.getItem('sigp_pantanoria_selected_corps');
+    if (saved === 'bombeiros' || saved === 'policia') return saved;
+    if (localStorage.getItem('sigp_pantanoria_bm_user')) return 'bombeiros';
+    if (localStorage.getItem('sigp_pantanoria_user')) return 'policia';
+    return null;
   });
 
+  const handleSelectCorps = (corps) => {
+    setSelectedCorps(corps);
+    localStorage.setItem('sigp_pantanoria_selected_corps', corps);
+  };
+
+  const handleSwitchCorps = () => {
+    setSelectedCorps(null);
+    localStorage.removeItem('sigp_pantanoria_selected_corps');
+  };
+
+  if (selectedCorps === 'bombeiros') {
+    return <BombeirosApp onSwitchCorps={handleSwitchCorps} />;
+  }
+
+  if (selectedCorps === 'policia') {
+    return <PoliciaApp onSwitchCorps={handleSwitchCorps} />;
+  }
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#f4f5f7] text-[#22262e]">
-      <header className="bg-white border-b border-[#e5e7eb] px-6 py-4">
-        <div className="max-w-[760px] mx-auto flex items-center justify-between gap-4">
-          <span className="font-extrabold text-[#0057ff] tracking-wide">SISTEMA</span>
-          {selectedCorp && (
-            <button
-              type="button"
-              onClick={() => setSelectedCorp(null)}
-              className="text-sm font-semibold text-[#22262e] underline cursor-pointer"
-            >
-              Voltar aos acessos
-            </button>
-          )}
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/25 via-slate-950 to-slate-950 pointer-events-none" />
+
+      <div className="w-full max-w-lg z-10 space-y-6">
+        <div className="text-center space-y-2">
+          <span className="text-xs font-mono uppercase tracking-widest text-slate-400 font-semibold">
+            Estado de Pantanória • Rede Integrada de Segurança e Resgate
+          </span>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
+            Portal das Corporações
+          </h1>
+          <p className="text-xs text-slate-400">
+            Escolha qual sistema deseja abrir neste terminal.
+          </p>
         </div>
-      </header>
 
-      <main className="flex-1 max-w-[760px] w-full mx-auto my-7 px-4">
-        {!selectedCorp ? (
-          <section className="flex flex-col gap-3">
-            {accesses.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleOpenCorp(item)}
-                className="w-full text-left bg-white border border-[#dfe3ea] rounded-[10px] px-5 py-4 shadow-xs hover:border-[#cbd5e1] flex items-center justify-between gap-3 cursor-pointer"
-              >
-                <span
-                  className={`text-base font-bold ${
-                    item.isFirefighter ? "text-[#dc2626]" : "text-[#1f2937]"
-                  }`}
-                >
-                  {item.label}
-                </span>
-                <span className="font-bold text-[#68707e]">→</span>
-              </button>
-            ))}
-          </section>
-        ) : (
-          <section className="bg-white border border-[#dfe3ea] rounded-[10px] p-5 shadow-xs">
-            <h1
-              className={`text-lg font-extrabold mb-3 ${
-                selectedCorp.isFirefighter ? "text-[#dc2626]" : "text-[#1f2937]"
-              }`}
-            >
-              {selectedCorp.label}
-            </h1>
-            <p className="text-sm text-[#68707e] mb-4">{selectedCorp.description}</p>
-
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Pesquisar registro..."
-              className="w-full h-10 px-3.5 rounded-lg border border-[#cbd5e1] text-sm mb-4"
-            />
-
-            {loading ? (
-              <p className="text-sm text-[#68707e]">Carregando...</p>
-            ) : filteredRecords.length === 0 ? (
-              <p className="text-sm text-[#68707e]">Nenhum registro encontrado.</p>
-            ) : (
-              <div className="flex flex-col gap-2.5">
-                {filteredRecords.map((rec, idx) => (
-                  <div
-                    key={rec.id || idx}
-                    className="border border-[#e5e7eb] rounded-lg p-3 text-sm"
-                  >
-                    <div className="font-bold text-[#1f2937]">
-                      {rec.nome} ({rec.nome_guerra})
-                    </div>
-                    <div className="text-[#68707e]">
-                      {rec.patente} • Matrícula: {rec.matricula} • {rec.grupamento}
-                    </div>
-                  </div>
-                ))}
+        <div className="space-y-4">
+          {/* 1. ACESSO BOMBEIROS (Tema Vermelho) */}
+          <button
+            type="button"
+            onClick={() => handleSelectCorps('bombeiros')}
+            className="w-full text-left group bg-gradient-to-r from-red-950/70 via-slate-900 to-slate-900 hover:from-red-900/60 border border-red-500/45 hover:border-red-400 rounded-2xl p-6 transition shadow-xl shadow-red-950/30 flex items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-red-600/25 border border-red-500/50 flex items-center justify-center shrink-0">
+                <Flame className="w-8 h-8 text-red-400" />
               </div>
-            )}
-          </section>
-        )}
-      </main>
+              <div>
+                <div className="text-[11px] font-mono uppercase tracking-wider text-red-400 font-bold">
+                  Corpo de Bombeiros Militar • CBM
+                </div>
+                <div className="text-lg sm:text-xl font-extrabold text-white mt-0.5">
+                  ACESSO BOMBEIROS
+                </div>
+                <p className="text-xs text-slate-300 mt-1">
+                  Plantão operacional, resgate APH, combate a incêndios, prontuário médico e comando CBM.
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="w-6 h-6 text-red-400 group-hover:translate-x-1 transition shrink-0" />
+          </button>
 
-      <footer className="mt-auto bg-[#141820] text-[#e5e7eb] px-6 py-4 text-sm">
-        <div className="max-w-[760px] mx-auto">EL Sistema</div>
-      </footer>
+          {/* 2. ACESSO POLÍCIA MILITAR (Tema Azul) */}
+          <button
+            type="button"
+            onClick={() => handleSelectCorps('policia')}
+            className="w-full text-left group bg-gradient-to-r from-blue-950/70 via-slate-900 to-slate-900 hover:from-blue-900/60 border border-blue-500/40 hover:border-blue-400 rounded-2xl p-6 transition shadow-xl shadow-blue-950/30 flex items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-blue-600/25 border border-blue-500/50 flex items-center justify-center shrink-0">
+                <Shield className="w-8 h-8 text-blue-400" />
+              </div>
+              <div>
+                <div className="text-[11px] font-mono uppercase tracking-wider text-blue-400 font-bold">
+                  Polícia Militar de Pantanória • SIGP
+                </div>
+                <div className="text-lg sm:text-xl font-extrabold text-white mt-0.5">
+                  ACESSO POLÍCIA MILITAR
+                </div>
+                <p className="text-xs text-slate-300 mt-1">
+                  Ponto eletrônico, INFOPEN, RENAVAM, relatórios pós-ocorrência, código penal e alto comando.
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="w-6 h-6 text-blue-400 group-hover:translate-x-1 transition shrink-0" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
