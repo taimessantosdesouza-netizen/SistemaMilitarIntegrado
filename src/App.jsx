@@ -410,6 +410,8 @@ export default function App() {
 
   const [reviewNotesMap, setReviewNotesMap] = useState({});
   const [reportFilterStatus, setReportFilterStatus] = useState('TODOS');
+  const [reportSearch, setReportSearch] = useState('');
+  const [reportFilterType, setReportFilterType] = useState('TODOS');
   const [cmdReportsFolderOpen, setCmdReportsFolderOpen] = useState(false);
   const [cmdReportFilterStatus, setCmdReportFilterStatus] = useState('PENDENTE');
   const [cmdReviewNotesMap, setCmdReviewNotesMap] = useState({});
@@ -926,7 +928,21 @@ export default function App() {
   const handleAddReport = async (e) => {
     e.preventDefault();
     unlockAudioContext();
-    if (!newReport.description.trim()) return;
+
+    const requiredFields = [
+      ['Local da ocorrência', newReport.location],
+      ['Descrição', newReport.description],
+    ];
+    const missingField = requiredFields.find(([, value]) => !String(value || '').trim());
+    if (missingField) {
+      window.alert(`Preencha o campo obrigatório: ${missingField[0]}.`);
+      return;
+    }
+    if (String(newReport.description).trim().length < 20) {
+      window.alert('A descrição precisa ter pelo menos 20 caracteres para garantir um registro claro.');
+      return;
+    }
+
     let croppedEvidence = null;
     try {
       croppedEvidence = await createCroppedEvidence(reportImage, cropZoom);
@@ -934,8 +950,14 @@ export default function App() {
       window.alert('Não foi possível processar a imagem. Tente selecionar o arquivo novamente.');
       return;
     }
+
     const payload = {
       ...newReport,
+      location: newReport.location.trim(),
+      involved_officers: newReport.involved_officers.trim(),
+      involved_citizens: newReport.involved_citizens.trim(),
+      description: newReport.description.trim(),
+      actions_taken: newReport.actions_taken.trim(),
       evidence_image: croppedEvidence,
       author_nick: currentUser.roblox_nick,
       author_rank: currentUser.rank_name,
@@ -946,9 +968,22 @@ export default function App() {
       reviewed_at: null,
       created_at: new Date().toISOString()
     };
-    const localItem = { id: crypto.randomUUID(), ...payload };
-    notifiedReportIdsRef.current.add(localItem.id);
-    setReports((prev) => [localItem, ...prev]);
+
+    // Só confirma o envio após a gravação remota. Assim, falhas não criam
+    // relatórios fantasmas na lista nem apagam os dados preenchidos no formulário.
+    let savedReport = { id: crypto.randomUUID(), ...payload };
+    if (isSupabaseConfigured && supabase) {
+      const { data, error } = await supabase.from('pm_reports').insert([payload]).select().single();
+      if (error || !data) {
+        console.error('Falha ao salvar relatório:', error);
+        window.alert(`Não foi possível salvar o relatório no banco de dados. Seus dados continuam no formulário. ${error?.message || ''}`);
+        return;
+      }
+      savedReport = data;
+    }
+
+    notifiedReportIdsRef.current.add(savedReport.id);
+    setReports((prev) => [savedReport, ...prev.filter((item) => item.id !== savedReport.id)]);
     setNewReport({
       report_type: 'OCORRENCIA',
       vtr_prefix: 'VTR-01',
@@ -964,29 +999,18 @@ export default function App() {
     setReportImageName('');
     setCropZoom(1);
 
-    let finalReport = localItem;
-    if (isSupabaseConfigured && supabase) {
-      const { id, ...dbPayload } = localItem;
-      const { data } = await supabase.from('pm_reports').insert([dbPayload]).select().single();
-      if (data) {
-        notifiedReportIdsRef.current.add(data.id);
-        finalReport = data;
-        setReports((prev) => prev.map((r) => (r.id === localItem.id ? data : r)));
-      }
-    }
-
     if (isHighRank) {
-      const toastId = `${finalReport.id}-${Date.now()}`;
+      const toastId = `${savedReport.id}-${Date.now()}`;
       setReportToasts((prev) => [
         {
           toastId,
-          reportId: finalReport.id,
-          author_nick: finalReport.author_nick,
-          author_rank: finalReport.author_rank,
-          location: finalReport.location || 'Local não informado',
-          incident_code: finalReport.incident_code || 'Código 1',
-          outcome: finalReport.outcome || 'Registrado',
-          created_at: finalReport.created_at
+          reportId: savedReport.id,
+          author_nick: savedReport.author_nick,
+          author_rank: savedReport.author_rank,
+          location: savedReport.location || 'Local não informado',
+          incident_code: savedReport.incident_code || 'Código 1',
+          outcome: savedReport.outcome || 'Registrado',
+          created_at: savedReport.created_at
         },
         ...prev
       ].slice(0, 4));
@@ -999,8 +1023,16 @@ export default function App() {
 
   const handleReviewReport = async (report, decision, customNotes) => {
     if (!isHighRank) return;
+    if ((report.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase()) {
+      window.alert('Para manter a imparcialidade, você não pode avaliar um relatório criado por você.');
+      return;
+    }
     const rawNote = customNotes !== undefined ? customNotes : reviewNotesMap[report.id];
     const notes = (rawNote || '').trim();
+    if (decision === 'REPROVADO' && notes.length < 8) {
+      window.alert('Informe um motivo com pelo menos 8 caracteres antes de reprovar o relatório.');
+      return;
+    }
     const reviewedAt = new Date().toISOString();
 
     const updatedFields = {
@@ -1015,13 +1047,15 @@ export default function App() {
       reviewed_at: reviewedAt
     };
 
-    setReports((prev) =>
-      prev.map((r) => (r.id === report.id ? { ...r, ...updatedFields } : r))
-    );
-
     if (isSupabaseConfigured && supabase) {
-      await supabase.from('pm_reports').update(updatedFields).eq('id', report.id);
+      const { error } = await supabase.from('pm_reports').update(updatedFields).eq('id', report.id);
+      if (error) {
+        console.error('Falha ao atualizar parecer:', error);
+        window.alert(`Não foi possível registrar a avaliação. ${error.message || ''}`);
+        return;
+      }
     }
+    setReports((prev) => prev.map((r) => (r.id === report.id ? { ...r, ...updatedFields } : r)));
   };
 
   const handleDeleteReport = async (report) => {
@@ -1035,17 +1069,27 @@ export default function App() {
     );
     if (!confirmed) return;
 
-    setReports((prev) => prev.filter((r) => r.id !== report.id));
-
     if (isSupabaseConfigured && supabase) {
-      await supabase.from('pm_reports').delete().eq('id', report.id);
+      const { error } = await supabase.from('pm_reports').delete().eq('id', report.id);
+      if (error) {
+        console.error('Falha ao apagar relatório:', error);
+        window.alert(`Não foi possível apagar o relatório. ${error.message || ''}`);
+        return;
+      }
     }
+    setReports((prev) => prev.filter((r) => r.id !== report.id));
   };
 
-  const copyDiscordFormat = (text, id) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2200);
+  const copyDiscordFormat = async (text, id) => {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard indisponível');
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2200);
+    } catch (error) {
+      console.error('Falha ao copiar relatório:', error);
+      window.alert('Não foi possível copiar automaticamente. Verifique a permissão de área de transferência do navegador.');
+    }
   };
 
   const formatReportForDiscord = (r) => {
@@ -1063,7 +1107,8 @@ export default function App() {
 - **Policiais envolvidos:** ${r.involved_officers || 'Nenhum'}
 
 **INFORMAÇÕES DA OCORRÊNCIA**
-- **Tipo de ocorrência:** ${r.incident_code || 'Código 1'}
+- **Natureza do registro:** ${r.report_type || 'OCORRENCIA'}
+- **Código operacional:** ${r.incident_code || 'Código 1'}
 - **Pessoas envolvidas:** ${r.involved_citizens || 'Não identificado'}
 - **Descrição resumida:** ${r.description}
 - **Providências tomadas:** ${r.actions_taken || 'Nenhuma'}
@@ -2744,6 +2789,22 @@ export default function App() {
                 Lavrar Relatório Pós-Ocorrência
               </h2>
               <form onSubmit={handleAddReport} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-400 mb-1">Natureza do registro</label>
+                  <select
+                    value={newReport.report_type}
+                    onChange={(e) => setNewReport({ ...newReport, report_type: e.target.value })}
+                    style={{ colorScheme: 'dark' }}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
+                  >
+                    <option value="OCORRENCIA">Ocorrência policial</option>
+                    <option value="ABORDAGEM">Abordagem</option>
+                    <option value="PERSEGUICAO">Perseguição</option>
+                    <option value="APREENSAO">Apreensão</option>
+                    <option value="APOIO">Apoio operacional</option>
+                    <option value="OUTRO">Outro registro</option>
+                  </select>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-slate-400 mb-1">Código / Tipo</label>
@@ -2807,13 +2868,16 @@ export default function App() {
                 <div>
                   <label className="block text-slate-400 mb-1">Descrição Resumida</label>
                   <textarea
-                    rows={3}
+                    rows={5}
                     required
-                    placeholder="Descreva o que aconteceu na ocorrência..."
+                    minLength={20}
+                    maxLength={3000}
+                    placeholder="Registre os fatos em ordem cronológica: situação inicial, ações dos envolvidos, intervenção policial e desfecho..."
                     value={newReport.description}
                     onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white"
                   />
+                  <div className="text-right text-[10px] text-slate-500">{newReport.description.length}/3000 caracteres (mínimo 20)</div>
                 </div>
 
                 <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/70 p-3 space-y-3">
@@ -2909,6 +2973,19 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-2 space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { label: 'Total', value: reports.filter((r) => isHighRank || (r.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase()), tone: 'text-slate-100' },
+                  { label: 'Pendentes', value: reports.filter((r) => (isHighRank || (r.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase()) && (r.review_status || 'PENDENTE') === 'PENDENTE'), tone: 'text-amber-300' },
+                  { label: 'Aprovados', value: reports.filter((r) => (isHighRank || (r.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase()) && r.review_status === 'APROVADO'), tone: 'text-emerald-300' },
+                  { label: 'Reprovados', value: reports.filter((r) => (isHighRank || (r.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase()) && r.review_status === 'REPROVADO'), tone: 'text-rose-300' }
+                ].map((metric) => (
+                  <div key={metric.label} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                    <div className="text-[10px] uppercase tracking-wider text-slate-500">{metric.label}</div>
+                    <div className={`text-xl font-extrabold ${metric.tone}`}>{metric.value.length}</div>
+                  </div>
+                ))}
+              </div>
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs text-slate-300">
                   {isHighRank ? (
@@ -2922,6 +2999,27 @@ export default function App() {
                     </>
                   )}
                 </div>
+                <input
+                  type="search"
+                  value={reportSearch}
+                  onChange={(e) => setReportSearch(e.target.value)}
+                  placeholder="Buscar por local, policial, envolvido ou descrição..."
+                  className="min-w-[220px] flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                />
+                <select
+                  value={reportFilterType}
+                  onChange={(e) => setReportFilterType(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
+                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+                >
+                  <option value="TODOS">Todas as naturezas</option>
+                  <option value="OCORRENCIA">Ocorrência</option>
+                  <option value="ABORDAGEM">Abordagem</option>
+                  <option value="PERSEGUICAO">Perseguição</option>
+                  <option value="APREENSAO">Apreensão</option>
+                  <option value="APOIO">Apoio</option>
+                  <option value="OUTRO">Outro</option>
+                </select>
                 <select
                   value={reportFilterStatus}
                   onChange={(e) => setReportFilterStatus(e.target.value)}
@@ -2939,16 +3037,20 @@ export default function App() {
                 .filter((rep) => {
                   const canView =
                     isHighRank ||
-                    rep.author_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase();
+                    (rep.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase();
                   if (!canView) return false;
 
                   const status = rep.review_status || 'PENDENTE';
-                  return reportFilterStatus === 'TODOS' || status === reportFilterStatus;
+                  const matchesStatus = reportFilterStatus === 'TODOS' || status === reportFilterStatus;
+                  const matchesType = reportFilterType === 'TODOS' || (rep.report_type || 'OCORRENCIA') === reportFilterType;
+                  const query = reportSearch.trim().toLocaleLowerCase('pt-BR');
+                  const searchable = [rep.location, rep.author_nick, rep.author_rank, rep.involved_officers, rep.involved_citizens, rep.description, rep.incident_code, rep.vtr_prefix, rep.actions_taken, rep.outcome, rep.report_type].join(' ').toLocaleLowerCase('pt-BR');
+                  return matchesStatus && matchesType && (!query || searchable.includes(query));
                 })
                 .map((rep) => {
                   const status = rep.review_status || 'PENDENTE';
                   const isAuthor =
-                    rep.author_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase();
+                    (rep.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase();
                   const canDelete = isHighRank || isAuthor;
 
                   return (
@@ -2969,6 +3071,7 @@ export default function App() {
                           >
                             {status}
                           </span>
+                          <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold">{({ OCORRENCIA: 'OCORRÊNCIA', ABORDAGEM: 'ABORDAGEM', PERSEGUICAO: 'PERSEGUIÇÃO', APREENSAO: 'APREENSÃO', APOIO: 'APOIO', OUTRO: 'OUTRO' })[rep.report_type] || 'OCORRÊNCIA'}</span>
                           <span className="font-bold text-white text-sm">{rep.location}</span>
                         </div>
 
@@ -2995,14 +3098,15 @@ export default function App() {
                         </div>
                       </div>
 
-                      <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                        <div className="rounded-lg bg-slate-950 border border-slate-800 p-2"><span className="text-slate-500">Viatura</span><div className="text-slate-200 font-semibold">{rep.vtr_prefix || 'Não informada'}</div></div>
+                        <div className="rounded-lg bg-slate-950 border border-slate-800 p-2"><span className="text-slate-500">Código operacional</span><div className="text-slate-200 font-semibold">{rep.incident_code || 'Não informado'}</div></div>
+                        <div className="rounded-lg bg-slate-950 border border-slate-800 p-2"><span className="text-slate-500">Policiais envolvidos</span><div className="text-slate-200">{rep.involved_officers || 'Não informado'}</div></div>
+                        <div className="rounded-lg bg-slate-950 border border-slate-800 p-2"><span className="text-slate-500">Providências</span><div className="text-slate-200">{rep.actions_taken || 'Não informado'}</div></div>
+                      </div>
+                      <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800 whitespace-pre-wrap">
                         {rep.description}
                       </p>
-                      {rep.evidence_image && (
-                        <a href={rep.evidence_image} target="_blank" rel="noreferrer" className="block">
-                          <img src={rep.evidence_image} alt="Evidência anexada à ocorrência" className="w-full max-h-72 object-contain rounded-lg border border-slate-700 bg-black" />
-                        </a>
-                      )}
                       {rep.evidence_image && (
                         <a href={rep.evidence_image} target="_blank" rel="noreferrer" className="block">
                           <img src={rep.evidence_image} alt="Evidência anexada à ocorrência" className="w-full max-h-72 object-contain rounded-lg border border-slate-700 bg-black" />
