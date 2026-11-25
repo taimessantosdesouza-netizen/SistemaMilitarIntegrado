@@ -1,115 +1,96 @@
-                          <td className="py-3 px-3 font-mono text-slate-300">{off.pin_code}</td>
-                          <td className="py-3 px-3 font-mono font-bold text-rose-400">{off.warnings || 0}</td>
-                          <td className="py-3 px-3">
-                            <div className="flex items-center gap-1">
-                              {isTopCommand && (
-                                <>
-                                  <button
-                                    onClick={() => handleChangeOfficerRank(off, 1)}
-                                    className="px-2 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 text-[10px] font-bold"
-                                  >
-                                    +Patente
-                                  </button>
-                                  <button
-                                    onClick={() => handleChangeOfficerRank(off, -1)}
-                                    className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px]"
-                                  >
-                                    -Patente
-                                  </button>
-                                </>
-                              )}
-                              <button
-                                onClick={() => handleToggleOfficerWarning(off, 1)}
-                                className="px-2 py-1 rounded bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 text-[10px] font-bold"
-                              >
-                                +Adv
-                              </button>
-                              {isTopCommand && (
-                                <button
-                                  onClick={() =>
-                                    handleUpdateOfficerStatus(
-                                      off,
-                                      off.status === 'Suspenso' ? 'Ativo' : 'Suspenso'
-                                    )
-                                  }
-                                  className="px-2 py-1 rounded bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 text-[10px]"
-                                >
-                                  {off.status === 'Suspenso' ? 'Reativar' : 'Suspender'}
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import {
+  Shield, Lock, LogOut, Radio, Users, Car, FileText, AlertTriangle,
+  CheckCircle2, Clock, Search, Plus, Copy, Check, Award,
+  UserCheck, KeyRound, Scale, Megaphone, Database,
+  Activity, ShieldAlert, Folder, FolderOpen, Trash2, ChevronDown, ChevronUp,
+  Bell, X, Volume2, Flame, Truck, ArrowLeft
+} from 'lucide-react';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 
-      {isHighRank && reportToasts.length > 0 && (
-        <div className="fixed bottom-4 right-4 z-50 w-full max-w-sm space-y-2.5 pointer-events-none px-4 sm:px-0">
-          {reportToasts.map((toast) => (
-            <div
-              key={toast.toastId}
-              className="pointer-events-auto bg-slate-900/95 border border-amber-500/50 rounded-2xl p-4 shadow-2xl shadow-black/70 backdrop-blur-md space-y-2.5"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0">
-                    <Bell className="w-4 h-4 text-amber-300 animate-bounce" />
-                  </span>
-                  <div>
-                    <div className="text-[11px] font-mono uppercase font-bold text-amber-300">
-                      Novo Relatório Recebido
-                    </div>
-                    <div className="text-xs font-bold text-white">
-                      @{toast.author_nick} • {toast.incident_code}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => dismissToast(toast.toastId)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+const INITIAL_OFFICERS = [
+  { id: '1', badge_number: 'PM-001', roblox_nick: 'Felipe', rp_name: 'Cmdt. Felipe', rank_level: 5, rank_name: 'Comandante-Geral', pin_code: '2026', status: 'Ativo', warnings: 0 },
+  { id: '2', badge_number: 'PM-002', roblox_nick: 'Tsantos', rp_name: 'Subcmdt. T. Santos', rank_level: 4, rank_name: 'Subcomandante', pin_code: '1900', status: 'Ativo', warnings: 0 },
+  { id: '3', badge_number: 'PM-003', roblox_nick: 'lucero', rp_name: 'Sup. Lucero', rank_level: 3, rank_name: 'Supervisor Operacional', pin_code: '1903', status: 'Ativo', warnings: 0 },
+  { id: '4', badge_number: 'PM-004', roblox_nick: 'krussttelles', rp_name: 'Sd. Krussttelles', rank_level: 2, rank_name: 'Policial Militar', pin_code: '1234', status: 'Ativo', warnings: 0 },
+  { id: '5', badge_number: 'PM-005', roblox_nick: 'Krustelles_22', rp_name: 'Sd. Krustelles', rank_level: 2, rank_name: 'Policial Militar', pin_code: '1234', status: 'Ativo', warnings: 0 },
+  { id: '6', badge_number: 'PM-006', roblox_nick: 'wyzontheradar', rp_name: 'Rec. Corrêa', rank_level: 1, rank_name: 'Recruta', pin_code: '0000', status: 'Em Formação', warnings: 0 },
+];
 
-              <div className="text-xs text-slate-300 bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 space-y-1">
-                <div>
-                  Local: <strong className="text-white">{toast.location}</strong>
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-slate-400">
-                  <span>Desfecho: <strong className="text-emerald-400">{toast.outcome}</strong></span>
-                  <span className="font-mono">{formatDateTime(toast.created_at)}</span>
-                </div>
-              </div>
+const INITIAL_BM_OFFICERS = [
+  { id: 'bm-1', badge_number: 'BM-001', roblox_nick: 'Felipe', rp_name: 'Cmdt. Felipe', rank_level: 5, rank_name: 'Comandante-Geral CBM', pin_code: '2026', status: 'Ativo', warnings: 0 },
+  { id: 'bm-2', badge_number: 'BM-002', roblox_nick: 'Tsantos', rp_name: 'Subcmdt. T. Santos', rank_level: 4, rank_name: 'Subcomandante CBM', pin_code: '1900', status: 'Ativo', warnings: 0 },
+];
 
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => dismissToast(toast.toastId)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
-                >
-                  Ignorar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openReportFromToast(toast)}
-                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold"
-                >
-                  Abrir Pasta
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+const INITIAL_DUTY_LOGS = [
+  {
+    id: 'd1',
+    officer_id: '4',
+    officer_nick: 'krussttelles',
+    officer_rp_name: 'Sd. Krussttelles',
+    officer_rank: 'Policial Militar',
+    badge_number: 'PM-004',
+    vtr_prefix: 'Caracterizada',
+    patrol_area: 'GV e Horton',
+    started_at: '2026-11-21T20:15:00-03:00',
+    ended_at: '2026-11-21T22:50:00-03:00',
+    duration_seconds: 9300,
+    status: 'ENCERRADO',
+    summary_notes: 'Perseguição atendida e troca de tiros em abordagem.'
+  },
+  {
+    id: 'd2',
+    officer_id: '3',
+    officer_nick: 'lucero',
+    officer_rp_name: 'Sup. Lucero',
+    officer_rank: 'Supervisor Operacional',
+    badge_number: 'PM-003',
+    vtr_prefix: 'VTR-02 Tática',
+    patrol_area: 'Túnel de Brookmere',
+    started_at: '2026-11-24T08:05:00-03:00',
+    ended_at: '2026-11-24T09:18:00-03:00',
+    duration_seconds: 4380,
+    status: 'ENCERRADO',
+    summary_notes: 'Prisão de detentos em fuga no Túnel de Brookmere (Código 3).'
+  }
+];
+
+const INITIAL_BM_DUTY_LOGS = [
+  {
+    id: 'bmd-1',
+    officer_id: 'bm-2',
+    officer_nick: 'Tsantos',
+    officer_rp_name: 'Subcmdt. T. Santos',
+    officer_rank: 'Subcomandante CBM',
+    badge_number: 'BM-002',
+    vtr_prefix: 'UR-01 Unidade de Resgate',
+    patrol_area: 'Quartel Central / GV',
+    started_at: '2026-11-24T18:10:00-03:00',
+    ended_at: '2026-11-24T19:45:00-03:00',
+    duration_seconds: 5700,
+    status: 'ENCERRADO',
+    summary_notes: 'Atendimento pré-hospitalar e prontidão operacional.'
+  }
+];
+
+const INITIAL_CITIZENS = [
+  {
+    id: 'c1',
+    passport: 'PTN-1001',
+    rp_name: 'Nickolas Silva',
+    roblox_nick: 'nick',
+    phone: '555-0142',
+    cnh_status: 'Suspensa',
+    gun_license: false,
+    wanted_status: 'Preso',
+    criminal_records: [
+      { date: '24/11/2026', crime: 'Fuga em alta velocidade (Túnel de Brookmere) - Código 3', officer: '@lucero' }
+    ]
+  },
+  {
+    id: 'c2',
+    passport: 'PTN-1002',
+    rp_name: 'Marcus Vance',
+    roblox_nick: 'mvance_rp',
+    phone: '555-0198',
+    cnh_status: 'Válida',
