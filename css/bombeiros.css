@@ -1,15 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
-:root {
-  --cbm-red: #dc2626;
-  --cbm-red-dark: #991b1b;
-  --cbm-red-deep: #7f1d1d;
-  --cbm-gold: #f59e0b;
-  --bg-page: #f5f5f7;
-  --text-main: #1f242d;
-  --text-muted: #64748b;
-  --border-light: #e2e8f0;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 * {
   box-sizing: border-box;
@@ -19,380 +8,165 @@
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--bg-page);
-  color: var(--text-main);
+  background: #f4f5f7;
+  color: #22262e;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* Cabeçalho Vermelho */
-.cbm-header {
-  background: linear-gradient(90deg, var(--cbm-red-deep) 0%, var(--cbm-red) 100%);
-  color: #ffffff;
-  border-bottom: 3px solid var(--cbm-gold);
+.top-bar {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
   padding: 16px 24px;
-  position: sticky;
-  top: 0;
-  z-index: 30;
 }
 
-.cbm-header-inner {
-  max-width: 1200px;
+.top-bar-inner {
+  max-width: 760px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.cbm-logo {
-  display: inline-flex;
-  align-items: center;
   gap: 12px;
-  text-decoration: none;
-  color: #ffffff;
 }
 
-.cbm-shield {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: #ffffff;
-  color: var(--cbm-red-deep);
-  font-weight: 900;
-  font-size: 0.92rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid var(--cbm-gold);
-}
-
-.cbm-title {
-  display: block;
-  font-size: 1.1rem;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-}
-
-.cbm-sub {
-  display: block;
-  font-size: 0.78rem;
-  color: #fecaca;
-}
-
-.cbm-nav {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-outline-white {
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  color: #ffffff;
-  text-decoration: none;
-  font-size: 0.84rem;
-  font-weight: 700;
-}
-
-.btn-outline-white:hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.btn-solid-white {
-  padding: 9px 18px;
-  border-radius: 999px;
-  border: none;
-  background: #ffffff;
-  color: var(--cbm-red-dark);
-  font-size: 0.84rem;
+.brand-name {
+  font-size: 1rem;
   font-weight: 800;
+  text-decoration: none;
+}
+
+.brand-name--bombeiros {
+  color: #dc2626;
+}
+
+.btn-outline {
+  border: 1px solid #dc2626;
+  background: #ffffff;
+  color: #dc2626;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.btn-solid-white:hover {
-  background: #fef2f2;
-}
-
-.cbm-main {
+.page-wrap {
   flex: 1 0 auto;
-  max-width: 1200px;
+  max-width: 760px;
   width: 100%;
   margin: 24px auto;
-  padding: 0 20px;
+  padding: 0 18px;
 }
 
-/* Painel de Cadastro */
-.cbm-panel {
+.panel {
   background: #ffffff;
-  border: 2px solid var(--cbm-red);
-  border-radius: 14px;
-  padding: 22px;
-  margin-bottom: 22px;
-  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.12);
-}
-
-.cbm-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  border: 1px solid #dfe3ea;
+  border-radius: 10px;
+  padding: 18px;
   margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #fee2e2;
 }
 
-.cbm-panel-head h2 {
-  font-size: 1.08rem;
-  color: var(--cbm-red-dark);
-}
-
-.btn-close-panel {
-  border: none;
-  background: #fee2e2;
-  color: var(--cbm-red-dark);
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.cbm-form-grid {
+.form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
 }
 
 .form-group label {
   display: block;
   font-size: 0.8rem;
-  font-weight: 700;
-  color: #374151;
-  margin-bottom: 5px;
+  font-weight: 600;
+  margin-bottom: 4px;
 }
 
 .form-control {
   width: 100%;
-  height: 40px;
+  height: 38px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
   padding: 0 12px;
   font-size: 0.9rem;
 }
 
-.form-control:focus {
-  outline: none;
-  border-color: var(--cbm-red);
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
-}
-
 .form-actions {
   grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
-  margin-top: 4px;
 }
 
-.btn-cbm-primary {
-  background: var(--cbm-red);
+.btn-primary {
+  background: #dc2626;
   color: #ffffff;
   border: none;
   border-radius: 999px;
-  height: 42px;
-  padding: 0 24px;
-  font-size: 0.88rem;
-  font-weight: 800;
+  height: 38px;
+  padding: 0 18px;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.btn-cbm-primary:hover {
-  background: var(--cbm-red-dark);
-}
-
-.cbm-notice {
-  margin-top: 12px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: var(--cbm-red-dark);
-  font-size: 0.86rem;
+.status-msg {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #991b1b;
   font-weight: 600;
 }
 
-/* Barra de Busca */
-.cbm-search-bar {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.cbm-search-input {
-  flex: 1;
-  min-width: 240px;
-  height: 44px;
-  border-radius: 999px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  padding: 0 20px;
-  font-size: 0.95rem;
-}
-
-.cbm-search-input:focus {
-  outline: none;
-  border-color: var(--cbm-red);
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
-}
-
-.cbm-select {
-  height: 44px;
-  border-radius: 999px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  padding: 0 16px;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.cbm-count {
-  font-size: 0.9rem;
-  color: var(--text-muted);
+.search-row {
   margin-bottom: 14px;
 }
 
-/* Grade de Cartões dos Bombeiros */
-.cbm-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-
-.cbm-card {
-  background: #ffffff;
-  border: 1px solid var(--border-light);
-  border-left: 5px solid var(--cbm-red);
-  border-radius: 10px;
-  padding: 20px;
-  display: flex;
-  gap: 18px;
-  align-items: center;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-}
-
-.cbm-badge {
-  width: 130px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 2px solid var(--cbm-red);
-  background: var(--cbm-red-deep);
-  text-align: center;
-}
-
-.cbm-photo {
-  height: 112px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fee2e2;
-  color: var(--cbm-red-deep);
-  font-size: 1.7rem;
-  font-weight: 900;
-}
-
-.cbm-photo img {
+.search-input {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.cbm-badge-foot {
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid #d5dae2;
   background: #ffffff;
-  padding: 8px 6px;
+  padding: 0 16px;
+  font-size: 0.9rem;
 }
 
-.cbm-war-name {
-  font-size: 0.82rem;
-  font-weight: 900;
-  color: var(--cbm-red-deep);
-  text-transform: uppercase;
-}
-
-.cbm-ato-tag {
-  margin-top: 2px;
-  font-size: 0.66rem;
-  font-weight: 800;
-  color: var(--cbm-red);
-  text-transform: uppercase;
-}
-
-.cbm-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.cbm-info h3 {
-  font-size: 1.12rem;
-  font-weight: 800;
-  color: var(--cbm-red-dark);
-  margin-bottom: 8px;
-}
-
-.cbm-meta {
-  list-style: none;
+.cards-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 12px;
+}
+
+.card-item {
+  background: #ffffff;
+  border: 1px solid #dfe3ea;
+  border-radius: 10px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.05);
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #dc2626;
+  margin-bottom: 6px;
+}
+
+.card-meta {
   font-size: 0.85rem;
   color: #4b5563;
 }
 
-.cbm-meta strong {
-  color: #111827;
-}
-
-.cbm-footer {
+.site-footer {
   margin-top: auto;
   background: #141820;
-  color: #9ca3af;
-  border-top: 3px solid var(--cbm-red);
+  color: #e5e7eb;
   padding: 16px 24px;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
 }
 
-.cbm-footer-inner {
-  max-width: 1200px;
+.site-footer-inner {
+  max-width: 760px;
   margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 .hidden {
   display: none !important;
-}
-
-@media (max-width: 820px) {
-  .cbm-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 560px) {
-  .cbm-card {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .cbm-badge {
-    width: 100%;
-    max-width: 170px;
-    margin: 0 auto;
-  }
 }
