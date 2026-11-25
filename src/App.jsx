@@ -218,7 +218,6 @@ export default function App() {
   const [globalSearch, setGlobalSearch] = useState('');
   const [copiedId, setCopiedId] = useState(null);
 
-  // Estado exclusivo da aba Bombeiros (tema vermelho)
   const [bmVtr, setBmVtr] = useState('UR-01 Unidade de Resgate');
   const [bmLocation, setBmLocation] = useState('Quartel Central / GV');
   const [bmSummary, setBmSummary] = useState('');
@@ -1063,7 +1062,6 @@ export default function App() {
     [reports]
   );
 
-  // Tela inicial de seleção (ACESSO BOMBEIROS em vermelho + ACESSO POLÍCIA MILITAR em azul)
   if (!selectedCorps) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -1086,7 +1084,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => handleSelectCorps('bombeiros')}
-              className="w-full text-left bg-gradient-to-r from-red-950/80 via-slate-900 to-slate-900 hover:from-red-900/70 border border-red-500/45 hover:border-red-400 rounded-2xl p-6 transition shadow-xl shadow-red-950/30 flex items-center justify-between gap-4"
+              className="w-full text-left bg-gradient-to-r from-red-950/90 via-slate-900 to-slate-900 hover:from-red-900/80 border border-red-500/45 hover:border-red-400 rounded-2xl p-6 transition shadow-xl shadow-red-950/30 flex items-center justify-between gap-4"
             >
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-red-600/25 border border-red-500/50 flex items-center justify-center shrink-0">
@@ -1112,7 +1110,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => handleSelectCorps('policia')}
-              className="w-full text-left bg-gradient-to-r from-blue-950/80 via-slate-900 to-slate-900 hover:from-blue-900/70 border border-blue-500/40 hover:border-blue-400 rounded-2xl p-6 transition shadow-xl shadow-blue-950/30 flex items-center justify-between gap-4"
+              className="w-full text-left bg-gradient-to-r from-blue-950/90 via-slate-900 to-slate-900 hover:from-blue-900/80 border border-blue-500/40 hover:border-blue-400 rounded-2xl p-6 transition shadow-xl shadow-blue-950/30 flex items-center justify-between gap-4"
             >
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-blue-600/25 border border-blue-500/50 flex items-center justify-center shrink-0">
@@ -1152,14 +1150,14 @@ export default function App() {
 
         <div className="w-full max-w-md z-10">
           <div
-            className={`bg-slate-900/90 border ${
-              isBmPortal ? 'border-red-900/50' : 'border-slate-800'
+            className={`bg-slate-900/95 border ${
+              isBmPortal ? 'border-red-800/60' : 'border-slate-700/80'
             } rounded-2xl shadow-2xl p-8 backdrop-blur-md`}
           >
             <button
               type="button"
               onClick={handleBackToStart}
-              className="mb-4 text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1.5"
+              className="mb-4 text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1.5"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Voltar para tela inicial
@@ -1218,7 +1216,7 @@ export default function App() {
                     placeholder={isBmPortal ? 'Ex: Felipe, BM-001 ou Tsantos' : 'Ex: Felipe, Tsantos ou PM-001'}
                     value={loginIdentifier}
                     onChange={(e) => setLoginIdentifier(e.target.value)}
-                    className={`w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none ${
+                    className={`w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none ${
                       isBmPortal ? 'focus:border-red-500' : 'focus:border-blue-500'
                     }`}
                   />
@@ -1237,7 +1235,7 @@ export default function App() {
                     placeholder="••••"
                     value={loginPin}
                     onChange={(e) => setLoginPin(e.target.value)}
-                    className={`w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white font-mono focus:outline-none ${
+                    className={`w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white font-mono focus:outline-none ${
                       isBmPortal ? 'focus:border-red-500' : 'focus:border-blue-500'
                     }`}
                   />
@@ -1265,14 +1263,14 @@ export default function App() {
             </form>
 
             <div className="mt-6 pt-5 border-t border-slate-800">
-              <p className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold mb-2.5 text-center">
+              <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-2.5 text-center">
                 Acesso Rápido (Testes / Comando)
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => { setLoginIdentifier('Felipe'); setLoginPin('2026'); }}
-                  className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800/80 transition"
+                  className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 transition"
                 >
                   <div className="text-xs font-bold text-amber-400">Cmdt. Felipe</div>
                   <div className="text-[10px] text-slate-400">Comandante-Geral</div>
@@ -1280,7 +1278,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => { setLoginIdentifier('Tsantos'); setLoginPin('1900'); }}
-                  className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800/80 transition"
+                  className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 transition"
                 >
                   <div className={`text-xs font-bold ${isBmPortal ? 'text-red-400' : 'text-blue-400'}`}>
                     Subcmdt. Tsantos
@@ -1290,7 +1288,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => { setLoginIdentifier('lucero'); setLoginPin('1903'); }}
-                  className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800/80 transition"
+                  className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 transition"
                 >
                   <div className="text-xs font-bold text-cyan-400">Sup. Lucero</div>
                   <div className="text-[10px] text-slate-400">Supervisor Operacional</div>
@@ -1298,7 +1296,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => { setLoginIdentifier('krussttelles'); setLoginPin('1234'); }}
-                  className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800/80 transition"
+                  className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 transition"
                 >
                   <div className="text-xs font-bold text-slate-200">Sd. Krussttelles</div>
                   <div className="text-[10px] text-slate-400">Policial Militar</div>
@@ -1317,10 +1315,10 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      <header className="bg-slate-900/95 border-b border-slate-800 sticky top-0 z-30 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+      <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shrink-0">
               <Shield className="w-6 h-6 text-blue-400" />
             </div>
             <div>
@@ -1339,31 +1337,31 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex-1 max-w-md min-w-[200px]">
+          <div className="flex-1 max-w-xs min-w-[180px]">
             <div className="relative">
-              <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 value={globalSearch}
                 onChange={(e) => setGlobalSearch(e.target.value)}
-                placeholder="Buscar cidadão por Passaporte (PTN-...), Nome ou Placa..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                placeholder="Buscar Passaporte, Nome ou Placa..."
+                className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {activeShift ? (
               <div className="flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/40 px-3 py-1.5 rounded-xl">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 <span className="text-xs font-mono font-bold text-emerald-300">
-                  EM SERVIÇO • {formatDuration(elapsedSeconds)}
+                  {formatDuration(elapsedSeconds)}
                 </span>
               </div>
             ) : (
               <div className="flex items-center gap-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl">
-                <span className="w-2 h-2 rounded-full bg-slate-500" />
-                <span className="text-xs font-mono text-slate-400">FORA DE SERVIÇO</span>
+                <span className="w-2 h-2 rounded-full bg-slate-400" />
+                <span className="text-xs font-mono text-slate-300">FORA DE SERVIÇO</span>
               </div>
             )}
 
@@ -1400,7 +1398,7 @@ export default function App() {
               type="button"
               onClick={handleBackToStart}
               title="Voltar para a tela inicial"
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition flex items-center gap-1.5 text-xs font-semibold"
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition flex items-center gap-1.5 text-xs font-semibold"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Início</span>
@@ -1409,7 +1407,7 @@ export default function App() {
             <button
               onClick={handleLogout}
               title="Sair do Terminal"
-              className="p-2 rounded-xl bg-slate-800 hover:bg-rose-500/20 hover:text-rose-300 border border-slate-700 text-slate-300 transition flex items-center gap-1.5 text-xs font-semibold"
+              className="p-2 rounded-xl bg-slate-800 hover:bg-rose-500/20 hover:text-rose-300 border border-slate-700 text-slate-200 transition flex items-center gap-1.5 text-xs font-semibold"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Sair</span>
@@ -1417,21 +1415,22 @@ export default function App() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 flex items-center gap-1 overflow-x-auto pb-2">
+        {/* Barra de navegação com quebra de linha limpa (sem barra de rolagem horizontal cortando abas) */}
+        <div className="max-w-7xl mx-auto px-4 pb-2.5 pt-1 flex flex-wrap items-center gap-1.5">
           {isHighCommand && (
             <button
               onClick={() => setActiveTab('comando')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 whitespace-nowrap transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
                 activeTab === 'comando'
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                  : 'text-amber-400/80 hover:bg-slate-800'
+                  : 'text-amber-400/90 hover:bg-slate-800'
               }`}
             >
-              <Award className="w-4 h-4" />
-              Alto Comando ({activeShiftsAll.length} em serviço)
+              <Award className="w-3.5 h-3.5" />
+              Alto Comando ({activeShiftsAll.length})
               {isHighRank && pendingReportsCount > 0 && (
                 <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/25 text-amber-200 border border-amber-500/40">
-                  {pendingReportsCount} rel.
+                  {pendingReportsCount}
                 </span>
               )}
             </button>
@@ -1439,86 +1438,86 @@ export default function App() {
 
           <button
             onClick={() => setActiveTab('operacional')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
               activeTab === 'operacional'
                 ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
           >
-            <Radio className="w-4 h-4" />
+            <Radio className="w-3.5 h-3.5" />
             Ponto & Patrulha
           </button>
 
           <button
             onClick={() => setActiveTab('infopen')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
               activeTab === 'infopen'
                 ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
           >
-            <Users className="w-4 h-4" />
-            INFOPEN (Cidadãos)
+            <Users className="w-3.5 h-3.5" />
+            INFOPEN
           </button>
 
           <button
             onClick={() => setActiveTab('veiculos')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
               activeTab === 'veiculos'
                 ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
           >
-            <Car className="w-4 h-4" />
-            RENAVAM (Veículos)
+            <Car className="w-3.5 h-3.5" />
+            RENAVAM
           </button>
 
           <button
             onClick={() => setActiveTab('relatorios')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
               activeTab === 'relatorios'
                 ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
           >
-            <FileText className="w-4 h-4" />
-            Relatórios & Discord
+            <FileText className="w-3.5 h-3.5" />
+            Relatórios
           </button>
 
           <button
             onClick={() => setActiveTab('codigo-penal')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
               activeTab === 'codigo-penal'
                 ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
           >
-            <Scale className="w-4 h-4" />
-            Código Penal & Pena
+            <Scale className="w-3.5 h-3.5" />
+            Código Penal
           </button>
 
           <button
             onClick={() => setActiveTab('hierarquia')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
               activeTab === 'hierarquia'
                 ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
           >
-            <Megaphone className="w-4 h-4" />
+            <Megaphone className="w-3.5 h-3.5" />
             Hierarquia & Mural
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('bombeiros')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 whitespace-nowrap transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
               activeTab === 'bombeiros'
                 ? 'bg-red-600 text-white shadow-md shadow-red-950/60'
-                : 'text-red-400 hover:bg-red-950/40 hover:text-red-300'
+                : 'text-red-400 bg-red-950/30 border border-red-500/25 hover:bg-red-950/50 hover:text-red-300'
             }`}
           >
-            <Flame className="w-4 h-4" />
+            <Flame className="w-3.5 h-3.5" />
             Bombeiros ({activeBmShiftsAll.length})
           </button>
         </div>
@@ -1527,14 +1526,14 @@ export default function App() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
         {activeTab === 'bombeiros' && (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-red-950/80 via-slate-900 to-slate-900 border border-red-500/40 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="bg-gradient-to-r from-red-950/85 via-slate-900 to-slate-900 border border-red-500/45 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 text-red-400 font-bold text-sm">
                   <Flame className="w-5 h-5" />
-                  CORPO DE BOMBEIROS MILITAR • ABA BOMBEIROS
+                  CORPO DE BOMBEIROS MILITAR • PRONTIDÃO E OCORRÊNCIAS
                 </div>
                 <p className="text-xs text-slate-300 mt-1">
-                  Prontidão em <code>bm_duty_logs</code>, efetivo em <code>bm_officers</code> ({bmOfficers.length} cadastrados) e ocorrências de resgate/incêndio.
+                  Efetivo em prontidão: <strong className="text-white">{activeBmShiftsAll.length}</strong> • Efetivo cadastrado: <strong className="text-white">{bmOfficers.length}</strong>
                 </p>
               </div>
               <button
@@ -1551,48 +1550,49 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="bg-slate-900 border border-red-900/40 rounded-2xl p-5 space-y-4 h-fit">
+              <div className="bg-slate-900/95 border border-slate-700/80 rounded-2xl p-5 space-y-4 h-fit">
                 <h3 className="text-sm font-bold text-red-300 flex items-center gap-2">
                   <Truck className="w-4 h-4 text-red-400" />
                   Viatura & Base Operacional
                 </h3>
                 <div className="space-y-3 text-xs">
                   <div>
-                    <label className="block text-slate-400 mb-1">Viatura CBM</label>
+                    <label className="block text-slate-300 mb-1">Viatura CBM</label>
                     <select
                       value={bmVtr}
                       onChange={(e) => setBmVtr(e.target.value)}
-                      className="w-full bg-slate-950 border border-red-500/30 focus:border-red-500 rounded-xl px-3 py-2.5 text-white"
+                      style={{ colorScheme: 'dark' }}
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-xl px-3 py-2.5 text-white"
                     >
-                      <option value="UR-01 Unidade de Resgate">UR-01 Unidade de Resgate (APH)</option>
-                      <option value="ABT-01 Auto Bomba Tanque">ABT-01 Auto Bomba Tanque (Incêndio)</option>
-                      <option value="USA-01 UTI Móvel">USA-01 UTI Móvel</option>
-                      <option value="ASE-01 Salvamento">ASE-01 Salvamento Especial</option>
+                      <option value="UR-01 Unidade de Resgate" className="bg-slate-950 text-white">UR-01 Unidade de Resgate (APH)</option>
+                      <option value="ABT-01 Auto Bomba Tanque" className="bg-slate-950 text-white">ABT-01 Auto Bomba Tanque (Incêndio)</option>
+                      <option value="USA-01 UTI Móvel" className="bg-slate-950 text-white">USA-01 UTI Móvel</option>
+                      <option value="ASE-01 Salvamento" className="bg-slate-950 text-white">ASE-01 Salvamento Especial</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1">Base / Setor</label>
+                    <label className="block text-slate-300 mb-1">Base / Setor</label>
                     <input
                       type="text"
                       value={bmLocation}
                       onChange={(e) => setBmLocation(e.target.value)}
-                      className="w-full bg-slate-950 border border-red-500/30 focus:border-red-500 rounded-xl px-3 py-2 text-white"
+                      className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-xl px-3 py-2 text-white"
                     />
                   </div>
                   {activeBmShift && (
                     <div>
-                      <label className="block text-slate-400 mb-1">Resumo da Prontidão</label>
+                      <label className="block text-slate-300 mb-1">Resumo da Prontidão</label>
                       <input
                         type="text"
                         placeholder="Ex: 2 resgates concluídos..."
                         value={bmSummary}
                         onChange={(e) => setBmSummary(e.target.value)}
-                        className="w-full bg-slate-950 border border-red-500/30 focus:border-red-500 rounded-xl px-3 py-2 text-white"
+                        className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-xl px-3 py-2 text-white"
                       />
                     </div>
                   )}
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
-                    <span className="text-slate-400">Status CBM:</span>
+                    <span className="text-slate-300">Status CBM:</span>
                     <span className={`font-mono font-bold ${activeBmShift ? 'text-emerald-400' : 'text-red-400'}`}>
                       {activeBmShift ? 'EM PRONTIDÃO' : 'FORA DE SERVIÇO'}
                     </span>
@@ -1627,11 +1627,12 @@ export default function App() {
                   <select
                     value={bmForm.natureza}
                     onChange={(e) => setBmForm({ ...bmForm, natureza: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-red-500 rounded-lg px-3 py-2 text-white"
+                    style={{ colorScheme: 'dark' }}
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-lg px-3 py-2 text-white"
                   >
-                    <option value="Resgate / APH">Resgate / APH</option>
-                    <option value="Combate a Incêndio">Combate a Incêndio</option>
-                    <option value="Salvamento Veicular">Salvamento Veicular</option>
+                    <option value="Resgate / APH" className="bg-slate-950 text-white">Resgate / APH</option>
+                    <option value="Combate a Incêndio" className="bg-slate-950 text-white">Combate a Incêndio</option>
+                    <option value="Salvamento Veicular" className="bg-slate-950 text-white">Salvamento Veicular</option>
                   </select>
                   <input
                     type="text"
@@ -1639,7 +1640,7 @@ export default function App() {
                     placeholder="Local da ocorrência"
                     value={bmForm.local}
                     onChange={(e) => setBmForm({ ...bmForm, local: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-red-500 rounded-lg px-3 py-2 text-white"
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-lg px-3 py-2 text-white"
                   />
                   <textarea
                     rows={3}
@@ -1647,7 +1648,7 @@ export default function App() {
                     placeholder="Detalhes do atendimento ou incêndio..."
                     value={bmForm.relato}
                     onChange={(e) => setBmForm({ ...bmForm, relato: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-red-500 rounded-lg p-2.5 text-white"
+                    className="w-full bg-slate-950 border border-slate-700 focus:border-red-500 rounded-lg p-2.5 text-white"
                   />
                   <button
                     type="submit"
@@ -1661,7 +1662,7 @@ export default function App() {
               <div className="lg:col-span-2 space-y-3">
                 <h3 className="text-sm font-bold text-red-300">Ocorrências Registradas — Bombeiros</h3>
                 {bmReports.map((item) => (
-                  <div key={item.id} className="bg-slate-900 border border-red-900/35 rounded-2xl p-4 space-y-2 text-xs">
+                  <div key={item.id} className="bg-slate-900/95 border border-slate-700/80 rounded-2xl p-4 space-y-2 text-xs">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/35 font-bold">
@@ -1671,7 +1672,7 @@ export default function App() {
                       </div>
                       <span className="font-mono text-red-300">{item.viatura} • {item.data}</span>
                     </div>
-                    <p className="text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <p className="text-slate-200 bg-slate-950 p-3 rounded-xl border border-slate-800">
                       {item.relato}
                     </p>
                   </div>
