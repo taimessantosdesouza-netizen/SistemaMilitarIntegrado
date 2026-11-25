@@ -1,38 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Acessos do Sistema</title>
-  <link rel="stylesheet" href="css/styles.css" />
-</head>
-<body>
-  <header class="top-bar">
-    <div class="top-bar-inner">
-      <span class="brand-name">SISTEMA</span>
-    </div>
-  </header>
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  <main class="page-wrap">
-    <section class="access-list">
-      <a class="access-item" href="bombeiros.html">
-        <span class="access-title access-title--bombeiros">ACESSO BOMBEIROS</span>
-        <span class="access-arrow">→</span>
-      </a>
-
-      <a class="access-item" href="policia-militar.html">
-        <span class="access-title">ACESSO POLÍCIA MILITAR</span>
-        <span class="access-arrow">→</span>
-      </a>
-
-      <!-- Copie um <a class="access-item"> acima para adicionar o próximo abaixo -->
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="site-footer-inner">
-      <span>EL Sistema</span>
-    </div>
-  </footer>
-</body>
-</html>
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 antialiased selection:bg-red-500/30 selection:text-red-200;
+  }
+}
