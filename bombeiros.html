@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema Corpo de Bombeiros — Boletim &amp; Efetivo</title>
+  <link rel="stylesheet" href="css/bombeiros.css" />
+</head>
+<body>
+  <header class="cbm-header">
+    <div class="cbm-header-inner">
+      <a class="cbm-logo" href="bombeiros.html">
+        <div class="cbm-shield">CBM</div>
+        <div>
+          <span class="cbm-title">CORPO DE BOMBEIROS</span>
+          <small class="cbm-sub">Boletim &amp; Registro Operacional</small>
+        </div>
+      </a>
+
+      <nav class="cbm-nav">
+        <a class="btn-outline-white" href="index.html">Trocar Corporação</a>
+        <button id="toggleAdminCbm" class="btn-solid-white" type="button">+ Novo Registro</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="cbm-main">
+    <!-- Formulário de Cadastro / Publicação (abre ao clicar em + Novo Registro) -->
+    <section id="cbmAdminBox" class="cbm-panel hidden">
+      <div class="cbm-panel-head">
+        <h2>Novo Registro / Publicação — Bombeiros</h2>
+        <button id="closeAdminCbm" class="btn-close-panel" type="button">✕</button>
+      </div>
+
+      <form id="cbmForm" class="cbm-form-grid">
+        <div class="form-group">
+          <label for="cbmNome">Nome Completo do Bombeiro</label>
+          <input id="cbmNome" class="form-control" type="text" required placeholder="Ex: Carlos Eduardo Silva" />
+        </div>
+
+        <div class="form-group">
+          <label for="cbmNomeGuerra">Nome de Guerra</label>
+          <input id="cbmNomeGuerra" class="form-control" type="text" required placeholder="Ex: SD SILVA" />
+        </div>
+
+        <div class="form-group">
+          <label for="cbmPatente">Patente / Posto</label>
+          <select id="cbmPatente" class="form-control" required>
+            <option value="Soldado BM">Soldado BM</option>
+            <option value="Cabo BM">Cabo BM</option>
+            <option value="3º Sargento BM">3º Sargento BM</option>
+            <option value="2º Sargento BM">2º Sargento BM</option>
+            <option value="1º Sargento BM">1º Sargento BM</option>
+            <option value="Subtenente BM">Subtenente BM</option>
+            <option value="2º Tenente BM">2º Tenente BM</option>
+            <option value="1º Tenente BM">1º Tenente BM</option>
+            <option value="Capitão BM">Capitão BM</option>
+            <option value="Major BM">Major BM</option>
+            <option value="Tenente-Coronel BM">Tenente-Coronel BM</option>
+            <option value="Coronel BM">Coronel BM</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="cbmGrupamento">Grupamento / Unidade</label>
+          <input id="cbmGrupamento" class="form-control" type="text" required placeholder="Ex: 1º GBM — Combate a Incêndio" />
+        </div>
+
+        <div class="form-group">
+          <label for="cbmAto">Tipo de Publicação / Ato</label>
+          <select id="cbmAto" class="form-control" required>
+            <option value="INCORPORAÇÃO">Incorporação / Admissão</option>
+            <option value="PROMOÇÃO">Promoção de Patente</option>
+            <option value="TRANSFERÊNCIA">Transferência de Grupamento</option>
+            <option value="DESPACHO OPERACIONAL">Despacho Operacional</option>
+            <option value="EXONERAÇÃO">Exoneração / Baixa</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="cbmFoto">URL da Foto (opcional)</label>
+          <input id="cbmFoto" class="form-control" type="url" placeholder="https://..." />
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-cbm-primary" type="submit">Publicar no Boletim dos Bombeiros</button>
+        </div>
+      </form>
+      <div id="cbmNotice" class="cbm-notice hidden"></div>
+    </section>
+
+    <!-- Barra de Busca e Filtros -->
+    <section class="cbm-search-bar">
+      <input
+        id="cbmSearchInput"
+        class="cbm-search-input"
+        type="search"
+        placeholder="Pesquisar por nome, nome de guerra, matrícula ou grupamento..."
+      />
+
+      <select id="cbmFilterAto" class="cbm-select">
+        <option value="">Todos os Atos</option>
+        <option value="INCORPORAÇÃO">Incorporação</option>
+        <option value="PROMOÇÃO">Promoção</option>
+        <option value="TRANSFERÊNCIA">Transferência</option>
+        <option value="DESPACHO OPERACIONAL">Despacho Operacional</option>
+        <option value="EXONERAÇÃO">Exoneração</option>
+      </select>
+    </section>
+
+    <!-- Contagem e Grade de Cartões -->
+    <section class="cbm-results">
+      <div id="cbmCount" class="cbm-count">Exibindo <strong>0</strong> registros</div>
+      <div id="cbmGrid" class="cbm-grid"></div>
+    </section>
+  </main>
+
+  <footer class="cbm-footer">
+    <div class="cbm-footer-inner">
+      <span>Corpo de Bombeiros Militar — Sistema Integrado</span>
+      <span>EL Sistema</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/bombeiros.js"></script>
+</body>
+</html>
