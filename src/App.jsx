@@ -1210,6 +1210,26 @@ export default function App() {
     }
   };
 
+  const handleDeleteAnnouncement = async (announcement) => {
+    if (!isHighCommand || !announcement?.id) return;
+
+    const confirmed = window.confirm(
+      `Apagar permanentemente o comunicado "${announcement.title}"?`
+    );
+    if (!confirmed) return;
+
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('pm_announcements').delete().eq('id', announcement.id);
+      if (error) {
+        console.error('Falha ao apagar comunicado:', error);
+        window.alert(`Não foi possível apagar o comunicado. ${error.message || ''}`);
+        return;
+      }
+    }
+
+    setAnnouncements((prev) => prev.filter((a) => a.id !== announcement.id));
+  };
+
   const filteredCitizens = useMemo(() => {
     const q = (globalSearch || citizenSearch).toLowerCase().trim();
     if (!q) return citizens;
@@ -3363,11 +3383,24 @@ export default function App() {
                           <span className="text-xs font-extrabold tracking-wide text-amber-400 uppercase">
                             {a.title}
                           </span>
-                          {idx === 0 && (
-                            <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                              Recente
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {idx === 0 && (
+                              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                Recente
+                              </span>
+                            )}
+                            {isHighCommand && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteAnnouncement(a)}
+                                title="Apagar comunicado"
+                                className="px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-bold flex items-center gap-1 transition"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Apagar
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <p className="text-xs text-slate-200 leading-relaxed whitespace-pre-line">
                           {a.content}
