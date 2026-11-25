@@ -4,7 +4,7 @@ import {
   CheckCircle2, Clock, Search, Plus, Copy, Check, Award,
   UserCheck, KeyRound, Scale, Megaphone, Database,
   Activity, ShieldAlert, Folder, FolderOpen, Trash2, ChevronDown, ChevronUp,
-  Bell, X, Volume2, Flame, Truck
+  Bell, X, Volume2, Flame, Truck, ArrowLeft
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
@@ -15,6 +15,11 @@ const INITIAL_OFFICERS = [
   { id: '4', badge_number: 'PM-004', roblox_nick: 'krussttelles', rp_name: 'Sd. Krussttelles', rank_level: 2, rank_name: 'Policial Militar', pin_code: '1234', status: 'Ativo', warnings: 0 },
   { id: '5', badge_number: 'PM-005', roblox_nick: 'Krustelles_22', rp_name: 'Sd. Krustelles', rank_level: 2, rank_name: 'Policial Militar', pin_code: '1234', status: 'Ativo', warnings: 0 },
   { id: '6', badge_number: 'PM-006', roblox_nick: 'wyzontheradar', rp_name: 'Rec. Corrêa', rank_level: 1, rank_name: 'Recruta', pin_code: '0000', status: 'Em Formação', warnings: 0 },
+];
+
+const INITIAL_BM_OFFICERS = [
+  { id: 'bm-1', badge_number: 'BM-001', roblox_nick: 'Felipe', rp_name: 'Cmdt. Felipe', rank_level: 5, rank_name: 'Comandante-Geral CBM', pin_code: '2026', status: 'Ativo', warnings: 0 },
+  { id: 'bm-2', badge_number: 'BM-002', roblox_nick: 'Tsantos', rp_name: 'Subcmdt. T. Santos', rank_level: 4, rank_name: 'Subcomandante CBM', pin_code: '1900', status: 'Ativo', warnings: 0 },
 ];
 
 const INITIAL_DUTY_LOGS = [
@@ -47,6 +52,24 @@ const INITIAL_DUTY_LOGS = [
     duration_seconds: 4380,
     status: 'ENCERRADO',
     summary_notes: 'Prisão de detentos em fuga no Túnel de Brookmere (Código 3).'
+  }
+];
+
+const INITIAL_BM_DUTY_LOGS = [
+  {
+    id: 'bmd-1',
+    officer_id: 'bm-2',
+    officer_nick: 'Tsantos',
+    officer_rp_name: 'Subcmdt. T. Santos',
+    officer_rank: 'Subcomandante CBM',
+    badge_number: 'BM-002',
+    vtr_prefix: 'UR-01 Unidade de Resgate',
+    patrol_area: 'Quartel Central / GV',
+    started_at: '2026-11-24T18:10:00-03:00',
+    ended_at: '2026-11-24T19:45:00-03:00',
+    duration_seconds: 5700,
+    status: 'ENCERRADO',
+    summary_notes: 'Atendimento pré-hospitalar e prontidão operacional.'
   }
 ];
 
@@ -169,6 +192,11 @@ function formatDuration(seconds) {
 }
 
 export default function App() {
+  const [selectedCorps, setSelectedCorps] = useState(() => {
+    const saved = localStorage.getItem('sigp_pantanoria_selected_corps');
+    return saved === 'bombeiros' || saved === 'policia' ? saved : null;
+  });
+
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('sigp_pantanoria_user');
     return saved ? JSON.parse(saved) : null;
@@ -178,7 +206,9 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
 
   const [officers, setOfficers] = useState(INITIAL_OFFICERS);
+  const [bmOfficers, setBmOfficers] = useState(INITIAL_BM_OFFICERS);
   const [dutyLogs, setDutyLogs] = useState(INITIAL_DUTY_LOGS);
+  const [bmDutyLogs, setBmDutyLogs] = useState(INITIAL_BM_DUTY_LOGS);
   const [citizens, setCitizens] = useState(INITIAL_CITIZENS);
   const [vehicles, setVehicles] = useState(INITIAL_VEHICLES);
   const [reports, setReports] = useState(INITIAL_REPORTS);
@@ -189,9 +219,9 @@ export default function App() {
   const [copiedId, setCopiedId] = useState(null);
 
   // Estado exclusivo da aba Bombeiros (tema vermelho)
-  const [bmActive, setBmActive] = useState(false);
   const [bmVtr, setBmVtr] = useState('UR-01 Unidade de Resgate');
   const [bmLocation, setBmLocation] = useState('Quartel Central / GV');
+  const [bmSummary, setBmSummary] = useState('');
   const [bmReports, setBmReports] = useState([
     {
       id: 'bm-init-1',
@@ -412,15 +442,19 @@ export default function App() {
     if (!isSupabaseConfigured || !supabase) return;
     (async () => {
       try {
-        const [offRes, dutyRes, citRes, vehRes, annRes] = await Promise.all([
+        const [offRes, bmOffRes, dutyRes, bmDutyRes, citRes, vehRes, annRes] = await Promise.all([
           supabase.from('pm_officers').select('*').order('rank_level', { ascending: false }),
+          supabase.from('bm_officers').select('*').order('rank_level', { ascending: false }),
           supabase.from('pm_duty_logs').select('*').order('started_at', { ascending: false }),
+          supabase.from('bm_duty_logs').select('*').order('started_at', { ascending: false }),
           supabase.from('pm_citizens').select('*').order('created_at', { ascending: false }),
           supabase.from('pm_vehicles').select('*').order('created_at', { ascending: false }),
           supabase.from('pm_announcements').select('*').order('created_at', { ascending: false }),
         ]);
         if (offRes.data && offRes.data.length > 0) setOfficers(offRes.data);
+        if (bmOffRes.data && bmOffRes.data.length > 0) setBmOfficers(bmOffRes.data);
         if (dutyRes.data) setDutyLogs(dutyRes.data);
+        if (bmDutyRes.data) setBmDutyLogs(bmDutyRes.data);
         if (citRes.data) setCitizens(citRes.data);
         if (vehRes.data) setVehicles(vehRes.data);
         if (annRes.data) setAnnouncements(annRes.data);
@@ -475,17 +509,49 @@ export default function App() {
     );
   }, [dutyLogs, currentUser]);
 
+  const activeBmShift = useMemo(() => {
+    if (!currentUser) return null;
+    return bmDutyLogs.find(
+      (log) =>
+        (log.officer_id === currentUser.id || log.officer_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase()) &&
+        log.status === 'EM_SERVICO'
+    );
+  }, [bmDutyLogs, currentUser]);
+
   const activeShiftsAll = useMemo(
     () => dutyLogs.filter((d) => d.status === 'EM_SERVICO'),
     [dutyLogs]
   );
+
+  const activeBmShiftsAll = useMemo(
+    () => bmDutyLogs.filter((d) => d.status === 'EM_SERVICO'),
+    [bmDutyLogs]
+  );
+
+  const handleSelectCorps = (corps) => {
+    setSelectedCorps(corps);
+    localStorage.setItem('sigp_pantanoria_selected_corps', corps);
+    setLoginError('');
+    if (corps === 'bombeiros') {
+      setActiveTab('bombeiros');
+    } else if (activeTab === 'bombeiros') {
+      setActiveTab('operacional');
+    }
+  };
+
+  const handleBackToStart = () => {
+    setSelectedCorps(null);
+    localStorage.removeItem('sigp_pantanoria_selected_corps');
+    setLoginError('');
+  };
 
   const handleLogin = (e) => {
     e.preventDefault();
     unlockAudioContext();
     setLoginError('');
     const term = loginIdentifier.trim().toLowerCase();
-    const found = officers.find(
+    const pool = selectedCorps === 'bombeiros' ? [...bmOfficers, ...officers] : officers;
+    const found = pool.find(
       (o) =>
         o.roblox_nick.toLowerCase() === term ||
         o.badge_number.toLowerCase() === term ||
@@ -493,7 +559,11 @@ export default function App() {
     );
 
     if (!found) {
-      setLoginError('Matrícula ou Nick Roblox não encontrado no efetivo da PM.');
+      setLoginError(
+        selectedCorps === 'bombeiros'
+          ? 'Matrícula ou Nick não encontrado no cadastro dos Bombeiros.'
+          : 'Matrícula ou Nick Roblox não encontrado no efetivo da PM.'
+      );
       return;
     }
     if (found.status === 'Suspenso' || found.status === 'Exonerado') {
@@ -507,7 +577,11 @@ export default function App() {
 
     setCurrentUser(found);
     localStorage.setItem('sigp_pantanoria_user', JSON.stringify(found));
-    setActiveTab(found.rank_level >= 3 ? 'comando' : 'operacional');
+    if (selectedCorps === 'bombeiros') {
+      setActiveTab('bombeiros');
+    } else {
+      setActiveTab(found.rank_level >= 3 ? 'comando' : 'operacional');
+    }
   };
 
   const handleLogout = () => {
@@ -574,6 +648,74 @@ export default function App() {
           summary_notes: updated.summary_notes
         })
         .eq('id', activeShift.id);
+    }
+  };
+
+  const handleToggleBmDuty = async () => {
+    if (!currentUser) return;
+    if (!activeBmShift) {
+      const bmMember = bmOfficers.find(
+        (o) => o.roblox_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase()
+      );
+      const newBmLog = {
+        id: crypto.randomUUID(),
+        officer_id: bmMember ? bmMember.id : currentUser.id,
+        officer_nick: currentUser.roblox_nick,
+        officer_rp_name: bmMember ? bmMember.rp_name : currentUser.rp_name,
+        officer_rank: bmMember ? bmMember.rank_name : currentUser.rank_name,
+        badge_number: bmMember ? bmMember.badge_number : `BM-${currentUser.badge_number}`,
+        vtr_prefix: bmVtr,
+        patrol_area: bmLocation || 'Quartel Central',
+        started_at: new Date().toISOString(),
+        ended_at: null,
+        duration_seconds: 0,
+        status: 'EM_SERVICO',
+        summary_notes: ''
+      };
+
+      setBmDutyLogs((prev) => [newBmLog, ...prev]);
+
+      if (isSupabaseConfigured && supabase) {
+        const { id, ...payload } = newBmLog;
+        const { data } = await supabase.from('bm_duty_logs').insert([payload]).select().single();
+        if (data) {
+          setBmDutyLogs((prev) => prev.map((item) => (item.id === newBmLog.id ? data : item)));
+        }
+      }
+    } else {
+      const endedAt = new Date().toISOString();
+      const durationSec = Math.max(
+        1,
+        Math.floor((new Date(endedAt).getTime() - new Date(activeBmShift.started_at).getTime()) / 1000)
+      );
+      const summaryText = bmSummary.trim() || 'Prontidão CBM encerrada sem alterações.';
+
+      setBmDutyLogs((prev) =>
+        prev.map((item) =>
+          item.id === activeBmShift.id
+            ? {
+                ...item,
+                ended_at: endedAt,
+                duration_seconds: durationSec,
+                status: 'ENCERRADO',
+                summary_notes: summaryText
+              }
+            : item
+        )
+      );
+      setBmSummary('');
+
+      if (isSupabaseConfigured && supabase) {
+        await supabase
+          .from('bm_duty_logs')
+          .update({
+            ended_at: endedAt,
+            duration_seconds: durationSec,
+            status: 'ENCERRADO',
+            summary_notes: summaryText
+          })
+          .eq('id', activeBmShift.id);
+      }
     }
   };
 
@@ -921,22 +1063,133 @@ export default function App() {
     [reports]
   );
 
-  if (!currentUser) {
+  // Tela inicial de seleção (ACESSO BOMBEIROS em vermelho + ACESSO POLÍCIA MILITAR em azul)
+  if (!selectedCorps) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/25 via-slate-950 to-slate-950 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/25 via-slate-950 to-slate-950 pointer-events-none" />
+
+        <div className="w-full max-w-lg z-10 space-y-6">
+          <div className="text-center space-y-1.5">
+            <span className="text-xs font-mono uppercase tracking-widest text-slate-400 font-semibold">
+              Estado de Pantanória • Rede Operacional
+            </span>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">
+              Portal das Corporações
+            </h1>
+            <p className="text-xs text-slate-400">
+              Escolha o acesso desejado para entrar no sistema.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => handleSelectCorps('bombeiros')}
+              className="w-full text-left bg-gradient-to-r from-red-950/80 via-slate-900 to-slate-900 hover:from-red-900/70 border border-red-500/45 hover:border-red-400 rounded-2xl p-6 transition shadow-xl shadow-red-950/30 flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-red-600/25 border border-red-500/50 flex items-center justify-center shrink-0">
+                  <Flame className="w-8 h-8 text-red-400" />
+                </div>
+                <div>
+                  <div className="text-[11px] font-mono uppercase tracking-wider text-red-400 font-bold">
+                    Corpo de Bombeiros Militar
+                  </div>
+                  <div className="text-xl font-extrabold text-white mt-0.5">
+                    ACESSO BOMBEIROS
+                  </div>
+                  <p className="text-xs text-slate-300 mt-1">
+                    Prontidão, viaturas ABT/UR, ocorrências de resgate e combate a incêndio.
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-red-600 text-white shrink-0">
+                Entrar
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectCorps('policia')}
+              className="w-full text-left bg-gradient-to-r from-blue-950/80 via-slate-900 to-slate-900 hover:from-blue-900/70 border border-blue-500/40 hover:border-blue-400 rounded-2xl p-6 transition shadow-xl shadow-blue-950/30 flex items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-blue-600/25 border border-blue-500/50 flex items-center justify-center shrink-0">
+                  <Shield className="w-8 h-8 text-blue-400" />
+                </div>
+                <div>
+                  <div className="text-[11px] font-mono uppercase tracking-wider text-blue-400 font-bold">
+                    Polícia Militar de Pantanória • SIGP
+                  </div>
+                  <div className="text-xl font-extrabold text-white mt-0.5">
+                    ACESSO POLÍCIA MILITAR
+                  </div>
+                  <p className="text-xs text-slate-300 mt-1">
+                    Ponto eletrônico, INFOPEN, RENAVAM, relatórios, código penal e alto comando.
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-blue-600 text-white shrink-0">
+                Entrar
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    const isBmPortal = selectedCorps === 'bombeiros';
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div
+          className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] ${
+            isBmPortal ? 'from-red-900/30' : 'from-blue-900/25'
+          } via-slate-950 to-slate-950 pointer-events-none`}
+        />
 
         <div className="w-full max-w-md z-10">
-          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl p-8 backdrop-blur-md">
+          <div
+            className={`bg-slate-900/90 border ${
+              isBmPortal ? 'border-red-900/50' : 'border-slate-800'
+            } rounded-2xl shadow-2xl p-8 backdrop-blur-md`}
+          >
+            <button
+              type="button"
+              onClick={handleBackToStart}
+              className="mb-4 text-xs font-semibold text-slate-400 hover:text-white flex items-center gap-1.5"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Voltar para tela inicial
+            </button>
+
             <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center mb-4 shadow-lg shadow-blue-900/40">
-                <Shield className="w-9 h-9 text-blue-400" />
+              <div
+                className={`w-16 h-16 rounded-2xl ${
+                  isBmPortal
+                    ? 'bg-red-600/20 border border-red-500/40 shadow-lg shadow-red-950/60'
+                    : 'bg-blue-600/20 border border-blue-500/40 shadow-lg shadow-blue-900/40'
+                } flex items-center justify-center mb-4`}
+              >
+                {isBmPortal ? (
+                  <Flame className="w-9 h-9 text-red-400" />
+                ) : (
+                  <Shield className="w-9 h-9 text-blue-400" />
+                )}
               </div>
-              <span className="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold">
-                Estado de Pantanória • Rede Operacional
+              <span
+                className={`text-xs font-mono uppercase tracking-widest font-semibold ${
+                  isBmPortal ? 'text-red-400' : 'text-blue-400'
+                }`}
+              >
+                {isBmPortal
+                  ? 'Corpo de Bombeiros Militar • Pantanória'
+                  : 'Estado de Pantanória • Rede Operacional'}
               </span>
               <h1 className="text-2xl font-extrabold text-white mt-1">
-                SIGP — Terminal Militar
+                {isBmPortal ? 'Acesso Bombeiros' : 'SIGP — Terminal Militar'}
               </h1>
               <p className="text-xs text-slate-400 mt-1">
                 Identifique-se com seu Nick Roblox ou Matrícula para acessar o sistema.
@@ -962,10 +1215,12 @@ export default function App() {
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Felipe, Tsantos ou PM-001"
+                    placeholder={isBmPortal ? 'Ex: Felipe, BM-001 ou Tsantos' : 'Ex: Felipe, Tsantos ou PM-001'}
                     value={loginIdentifier}
                     onChange={(e) => setLoginIdentifier(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className={`w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none ${
+                      isBmPortal ? 'focus:border-red-500' : 'focus:border-blue-500'
+                    }`}
                   />
                 </div>
               </div>
@@ -982,7 +1237,9 @@ export default function App() {
                     placeholder="••••"
                     value={loginPin}
                     onChange={(e) => setLoginPin(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-blue-500"
+                    className={`w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white font-mono focus:outline-none ${
+                      isBmPortal ? 'focus:border-red-500' : 'focus:border-blue-500'
+                    }`}
                   />
                 </div>
               </div>
@@ -996,7 +1253,11 @@ export default function App() {
 
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-900/40"
+                className={`w-full ${
+                  isBmPortal
+                    ? 'bg-red-600 hover:bg-red-500 shadow-lg shadow-red-950/60'
+                    : 'bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/40'
+                } text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2`}
               >
                 <KeyRound className="w-4 h-4" />
                 Autenticar no Sistema
@@ -1021,7 +1282,9 @@ export default function App() {
                   onClick={() => { setLoginIdentifier('Tsantos'); setLoginPin('1900'); }}
                   className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800/80 transition"
                 >
-                  <div className="text-xs font-bold text-blue-400">Subcmdt. Tsantos</div>
+                  <div className={`text-xs font-bold ${isBmPortal ? 'text-red-400' : 'text-blue-400'}`}>
+                    Subcmdt. Tsantos
+                  </div>
                   <div className="text-[10px] text-slate-400">Subcomandante</div>
                 </button>
                 <button
@@ -1132,6 +1395,16 @@ export default function App() {
                 <span className="hidden md:inline">{soundEnabled ? 'Som ON' : 'Mudo'}</span>
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={handleBackToStart}
+              title="Voltar para a tela inicial"
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition flex items-center gap-1.5 text-xs font-semibold"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Início</span>
+            </button>
 
             <button
               onClick={handleLogout}
@@ -1246,7 +1519,7 @@ export default function App() {
             }`}
           >
             <Flame className="w-4 h-4" />
-            Bombeiros
+            Bombeiros ({activeBmShiftsAll.length})
           </button>
         </div>
       </header>
@@ -1261,19 +1534,19 @@ export default function App() {
                   CORPO DE BOMBEIROS MILITAR • ABA BOMBEIROS
                 </div>
                 <p className="text-xs text-slate-300 mt-1">
-                  Controle de prontidão, viaturas e ocorrências de resgate, APH e combate a incêndio.
+                  Prontidão em <code>bm_duty_logs</code>, efetivo em <code>bm_officers</code> ({bmOfficers.length} cadastrados) e ocorrências de resgate/incêndio.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setBmActive((prev) => !prev)}
+                onClick={handleToggleBmDuty}
                 className={`px-4 py-2.5 rounded-xl text-xs font-bold transition ${
-                  bmActive
+                  activeBmShift
                     ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
                     : 'bg-red-600 hover:bg-red-500 text-white'
                 }`}
               >
-                {bmActive ? 'Encerrar Prontidão CBM' : 'Iniciar Prontidão CBM'}
+                {activeBmShift ? 'Encerrar Prontidão CBM' : 'Iniciar Prontidão CBM'}
               </button>
             </div>
 
@@ -1306,10 +1579,22 @@ export default function App() {
                       className="w-full bg-slate-950 border border-red-500/30 focus:border-red-500 rounded-xl px-3 py-2 text-white"
                     />
                   </div>
+                  {activeBmShift && (
+                    <div>
+                      <label className="block text-slate-400 mb-1">Resumo da Prontidão</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: 2 resgates concluídos..."
+                        value={bmSummary}
+                        onChange={(e) => setBmSummary(e.target.value)}
+                        className="w-full bg-slate-950 border border-red-500/30 focus:border-red-500 rounded-xl px-3 py-2 text-white"
+                      />
+                    </div>
+                  )}
                   <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
                     <span className="text-slate-400">Status CBM:</span>
-                    <span className={`font-mono font-bold ${bmActive ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {bmActive ? 'EM PRONTIDÃO' : 'FORA DE SERVIÇO'}
+                    <span className={`font-mono font-bold ${activeBmShift ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {activeBmShift ? 'EM PRONTIDÃO' : 'FORA DE SERVIÇO'}
                     </span>
                   </div>
                 </div>
