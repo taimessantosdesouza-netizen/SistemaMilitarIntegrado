@@ -1,63 +1,15 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Acesso Bombeiros</title>
-  <link rel="stylesheet" href="css/bombeiros.css" />
-</head>
-<body>
-  <header class="top-bar">
-    <div class="top-bar-inner">
-      <a class="brand-name brand-name--bombeiros" href="index.html">← ACESSO BOMBEIROS</a>
-      <button id="toggleFormBtn" class="btn-outline" type="button">+ Novo Registro</button>
-    </div>
-  </header>
-
-  <main class="page-wrap">
-    <section id="formPanel" class="panel hidden">
-      <form id="bombeiroForm" class="form-grid">
-        <div class="form-group">
-          <label for="nomeInput">Nome Completo</label>
-          <input id="nomeInput" class="form-control" type="text" required placeholder="Ex: João da Silva" />
-        </div>
-
-        <div class="form-group">
-          <label for="guerraInput">Nome de Guerra</label>
-          <input id="guerraInput" class="form-control" type="text" required placeholder="Ex: BM SILVA" />
-        </div>
-
-        <div class="form-group">
-          <label for="patenteInput">Patente / Posto</label>
-          <input id="patenteInput" class="form-control" type="text" required placeholder="Ex: Soldado BM" />
-        </div>
-
-        <div class="form-group">
-          <label for="grupamentoInput">Grupamento / Unidade</label>
-          <input id="grupamentoInput" class="form-control" type="text" required placeholder="Ex: 1º GBM" />
-        </div>
-
-        <div class="form-actions">
-          <button class="btn-primary" type="submit">Salvar Registro</button>
-        </div>
-      </form>
-      <div id="statusMsg" class="status-msg hidden"></div>
-    </section>
-
-    <div class="search-row">
-      <input id="searchInput" class="search-input" type="search" placeholder="Buscar bombeiro..." />
-    </div>
-
-    <div id="cardsList" class="cards-list"></div>
-  </main>
-
-  <footer class="site-footer">
-    <div class="site-footer-inner">
-      <span>EL Sistema</span>
-    </div>
-  </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/bombeiros.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CBM Pantanória — Corpo de Bombeiros Militar</title>
+    <link rel="stylesheet" href="/css/portal.css" />
+    <link rel="stylesheet" href="/css/bombeiros.css" />
+  </head>
+  <body class="cbm-theme">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/js/bombeiros.js"></script>
+  </body>
 </html>
