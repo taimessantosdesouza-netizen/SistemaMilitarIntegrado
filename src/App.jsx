@@ -949,7 +949,7 @@ export default function App() {
       ? `\n• **Parecer (${statusLabel} por @${r.reviewed_by}):** ${r.review_notes || 'Sem observações'}`
       : `\n• **Status Comando:** ${statusLabel}`;
 
-    return `🚓 **RELATÓRIO PÓS-OCORRÊNCIA — POLÍCIA MILITAR DE PANTANÓRIA**
+    return `🚓 **RELATÓRIO PÓS-OCORRÊNCIA — POLÍCIA MILITAR DE CAPITAL VILLE**
 - **Responsável:** @${r.author_nick}
 - **Patente:** @${r.author_rank}
 - **Data e horário:** ${formatDateTime(r.created_at)}
@@ -969,7 +969,7 @@ export default function App() {
   };
 
   const formatDutyForDiscord = (d) => {
-    return `🚓 **SERVIÇO OPERACIONAL — POLÍCIA MILITAR DE PANTANÓRIA**
+    return `🚓 **SERVIÇO OPERACIONAL — POLÍCIA MILITAR DE CAPITAL VILLE**
 - **Responsável:** @${d.officer_nick} (${d.badge_number})
 - **Patente:** @${d.officer_rank}
 - **Início do Turno:** ${formatDateTime(d.started_at)}
@@ -1142,7 +1142,7 @@ export default function App() {
                 <Shield className="w-9 h-9 text-blue-400" />
               </div>
               <span className="text-xs font-mono uppercase tracking-widest font-semibold text-blue-400">
-                Polícia Militar de Pantanória • Rede Operacional
+                Polícia Militar de Capital Ville • Rede Operacional
               </span>
               <h1 className="text-2xl font-extrabold text-white mt-1">SIGP — Terminal da Polícia Militar</h1>
               <p className="text-xs text-slate-400 mt-1">
@@ -1271,7 +1271,7 @@ export default function App() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-white tracking-tight">SIGP PANTANÓRIA</span>
+                <span className="font-extrabold text-white tracking-tight">SIGP CAPITAL VILLE</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30">
                   RP MILITAR
                 </span>
@@ -2990,7 +2990,7 @@ export default function App() {
                   <span className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
                     <Shield className="w-4 h-4 text-blue-400" />
                   </span>
-                  Hierarquia Oficial — PM Pantanória
+                  Hierarquia Oficial — PM Capital Ville
                 </h2>
                 <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30">
                   {RANKS.length} Postos
