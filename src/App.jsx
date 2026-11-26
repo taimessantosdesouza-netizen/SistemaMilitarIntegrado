@@ -1,14 +1,14 @@
+```jsx
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import {
-  Shield, Lock, LogOut, Radio, Users, Car, FileText, AlertTriangle,
-  CheckCircle2, Clock, Search, Plus, Copy, Check, Award,
-  UserCheck, KeyRound, Scale, Megaphone, Database,
-  Activity, ShieldAlert, Folder, FolderOpen, Trash2, ChevronDown, ChevronUp,
-  Bell, X, Volume2, ArrowLeft
+import { 
+  Shield, Lock, LogOut, Radio, Users, Car, FileText, AlertTriangle, 
+  CheckCircle2, Clock, Search, Plus, Copy, Check, Award, UserCheck, 
+  KeyRound, Scale, Megaphone, Database, Activity, ShieldAlert, Folder, 
+  FolderOpen, Trash2, ChevronDown, ChevronUp, Bell, X, Volume2, ArrowLeft 
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 
-```
+// Perfis atualizados: Apenas os 2 Comandantes
 const INITIAL_OFFICERS = [
   { 
     id: '1', 
@@ -34,78 +34,61 @@ const INITIAL_OFFICERS = [
   },
 ];
 
-```
-
 const INITIAL_DUTY_LOGS = [
-  {
-    id: 'd1',
-    officer_id: '4',
-    officer_nick: 'krussttelles',
-    officer_rp_name: 'Sd. Krussttelles',
-    officer_rank: 'Policial Militar',
-    badge_number: 'PM-004',
-    vtr_prefix: 'Caracterizada',
-    patrol_area: 'GV e Horton',
-    started_at: '2026-11-21T20:15:00-03:00',
-    ended_at: '2026-11-21T22:50:00-03:00',
-    duration_seconds: 9300,
-    status: 'ENCERRADO',
-    summary_notes: 'Perseguição atendida e troca de tiros em abordagem.'
-  },
-  {
-    id: 'd2',
-    officer_id: '3',
-    officer_nick: 'lucero',
-    officer_rp_name: 'Sup. Lucero',
-    officer_rank: 'Supervisor Operacional',
-    badge_number: 'PM-003',
-    vtr_prefix: 'VTR-02 Tática',
-    patrol_area: 'Túnel de Brookmere',
-    started_at: '2026-11-24T08:05:00-03:00',
-    ended_at: '2026-11-24T09:18:00-03:00',
-    duration_seconds: 4380,
-    status: 'ENCERRADO',
-    summary_notes: 'Prisão de detentos em fuga no Túnel de Brookmere (Código 3).'
+  { 
+    id: 'd1', 
+    officer_id: '2', 
+    officer_nick: 'Joao', 
+    officer_rp_name: 'Cmdt. João', 
+    officer_rank: 'Subcomandante', 
+    badge_number: 'PM-002', 
+    vtr_prefix: 'Caracterizada', 
+    patrol_area: 'GV e Horton', 
+    started_at: '2026-11-21T20:15:00-03:00', 
+    ended_at: '2026-11-21T22:50:00-03:00', 
+    duration_seconds: 9300, 
+    status: 'ENCERRADO', 
+    summary_notes: 'Patrulhamento geral e supervisão de área.' 
   }
 ];
 
 const INITIAL_CITIZENS = [
-  {
-    id: 'c1',
-    passport: 'PTN-1001',
-    rp_name: 'Nickolas Silva',
-    roblox_nick: 'nick',
-    phone: '555-0142',
-    cnh_status: 'Suspensa',
-    gun_license: false,
-    wanted_status: 'Preso',
-    criminal_records: [
-      { date: '24/11/2026', crime: 'Fuga em alta velocidade (Túnel de Brookmere) - Código 3', officer: '@lucero' }
-    ]
+  { 
+    id: 'c1', 
+    passport: 'PTN-1001', 
+    rp_name: 'Nickolas Silva', 
+    roblox_nick: 'nick', 
+    phone: '555-0142', 
+    cnh_status: 'Suspensa', 
+    gun_license: false, 
+    wanted_status: 'Preso', 
+    criminal_records: [ 
+      { date: '24/11/2026', crime: 'Fuga em alta velocidade (Túnel de Brookmere) - Código 3', officer: '@Santos' } 
+    ] 
   },
-  {
-    id: 'c2',
-    passport: 'PTN-1002',
-    rp_name: 'Marcus Vance',
-    roblox_nick: 'mvance_rp',
-    phone: '555-0198',
-    cnh_status: 'Válida',
-    gun_license: false,
-    wanted_status: 'Procurado',
-    criminal_records: [
-      { date: '21/11/2026', crime: 'Troca de tiros em abordagem / Homicídio de Oficial (GV)', officer: '@krussttelles' }
-    ]
+  { 
+    id: 'c2', 
+    passport: 'PTN-1002', 
+    rp_name: 'Marcus Vance', 
+    roblox_nick: 'mvance_rp', 
+    phone: '555-0198', 
+    cnh_status: 'Válida', 
+    gun_license: false, 
+    wanted_status: 'Procurado', 
+    criminal_records: [ 
+      { date: '21/11/2026', crime: 'Troca de tiros em abordagem / Homicídio de Oficial (GV)', officer: '@Joao' } 
+    ] 
   },
-  {
-    id: 'c3',
-    passport: 'PTN-1003',
-    rp_name: 'Arthur Pendelton',
-    roblox_nick: 'arthur_p',
-    phone: '555-0111',
-    cnh_status: 'Válida',
-    gun_license: true,
-    wanted_status: 'Limpo',
-    criminal_records: []
+  { 
+    id: 'c3', 
+    passport: 'PTN-1003', 
+    rp_name: 'Arthur Pendelton', 
+    roblox_nick: 'arthur_p', 
+    phone: '555-0111', 
+    cnh_status: 'Válida', 
+    gun_license: true, 
+    wanted_status: 'Limpo', 
+    criminal_records: [] 
   }
 ];
 
@@ -116,36 +99,36 @@ const INITIAL_VEHICLES = [
 ];
 
 const INITIAL_REPORTS = [
-  {
-    id: 'r1',
-    report_type: 'OCORRENCIA',
-    author_nick: 'lucero',
-    author_rank: 'Supervisor Operacional',
-    vtr_prefix: 'VTR-02',
-    location: 'Túnel de Brookmere',
-    incident_code: 'Código 3',
-    involved_officers: '@Krustelles_22 @wyzontheradar',
-    involved_citizens: 'nick (PTN-1001)',
-    description: 'Detentos correndo em alta velocidade indo para o túnel em tentativa de fuga, sendo interceptados e detidos pela guarnição.',
-    actions_taken: 'Cerco tático e algemação',
-    outcome: 'Preso',
-    review_status: 'APROVADO',
-    reviewed_by: 'Felipe',
-    reviewer_rank: 'Comandante-Geral',
-    review_notes: 'Relatório claro e condizente com o registro de turno.',
-    reviewed_at: '2026-11-24T09:45:00-03:00',
-    created_at: '2026-11-24T09:18:00-03:00'
+  { 
+    id: 'r1', 
+    report_type: 'OCORRENCIA', 
+    author_nick: 'Joao', 
+    author_rank: 'Subcomandante', 
+    vtr_prefix: 'VTR-02', 
+    location: 'Túnel de Brookmere', 
+    incident_code: 'Código 3', 
+    involved_officers: '@Santos', 
+    involved_citizens: 'nick (PTN-1001)', 
+    description: 'Detentos correndo em alta velocidade indo para o túnel em tentativa de fuga, sendo interceptados e detidos pela guarnição.', 
+    actions_taken: 'Cerco tático e algemação', 
+    outcome: 'Preso', 
+    review_status: 'APROVADO', 
+    reviewed_by: 'Santos', 
+    reviewer_rank: 'Comandante-Geral', 
+    review_notes: 'Relatório claro e condizente com o registro de turno.', 
+    reviewed_at: '2026-11-24T09:45:00-03:00', 
+    created_at: '2026-11-24T09:18:00-03:00' 
   }
 ];
 
 const INITIAL_ANNOUNCEMENTS = [
-  {
-    id: 'a1',
-    title: 'PARAMETRIZAÇÃO — RECRUTA CORRÊA',
-    category: 'PARAMETRIZACAO',
-    content: 'O candidato Corrêa (@wyzontheradar) obteve a nota 9,1/10, demonstrando excelente desempenho no processo seletivo, respeito à hierarquia e conhecimento institucional. Bem-vindo à corporação!',
-    author_nick: 'Felipe',
-    created_at: '2026-11-24T00:31:00-03:00'
+  { 
+    id: 'a1', 
+    title: 'COMUNICADO DO ALTO COMANDO', 
+    category: 'PARAMETRIZACAO', 
+    content: 'Quadro de Comando atualizado. Os perfis autorizados de comando são o Cmdt. Santos e o Cmdt. João.', 
+    author_nick: 'Santos', 
+    created_at: '2026-11-26T14:00:00-03:00' 
   }
 ];
 
@@ -169,14 +152,7 @@ const RANKS = [
 function formatDateTime(isoString) {
   if (!isoString) return '—';
   const d = new Date(isoString);
-  return d.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
+  return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 function formatDuration(seconds) {
@@ -188,13 +164,11 @@ function formatDuration(seconds) {
 }
 
 export default function App() {
-  // Este portal agora atende exclusivamente à Polícia Militar.
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('sigp_pantanoria_user');
     if (!saved) return null;
     try {
       const user = JSON.parse(saved);
-      // Impede que uma sessão antiga de outra corporação entre no sistema da PM.
       if (String(user?.badge_number || '').toUpperCase().startsWith('BM-')) {
         localStorage.removeItem('sigp_pantanoria_user');
         return null;
@@ -205,6 +179,7 @@ export default function App() {
       return null;
     }
   });
+
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPin, setLoginPin] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -217,8 +192,11 @@ export default function App() {
   const [announcements, setAnnouncements] = useState(INITIAL_ANNOUNCEMENTS);
 
   const [activeTab, setActiveTab] = useState('operacional');
-  // Remove a preferência antiga de seleção de corporação, se existir.
-  useEffect(() => { localStorage.removeItem('sigp_pantanoria_selected_corps'); }, []);
+
+  useEffect(() => {
+    localStorage.removeItem('sigp_pantanoria_selected_corps');
+  }, []);
+
   const [globalSearch, setGlobalSearch] = useState('');
   const [copiedId, setCopiedId] = useState(null);
 
@@ -229,13 +207,8 @@ export default function App() {
   const currentUserRef = useRef(currentUser);
   const soundEnabledRef = useRef(soundEnabled);
 
-  useEffect(() => {
-    currentUserRef.current = currentUser;
-  }, [currentUser]);
-
-  useEffect(() => {
-    soundEnabledRef.current = soundEnabled;
-  }, [soundEnabled]);
+  useEffect(() => { currentUserRef.current = currentUser; }, [currentUser]);
+  useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
 
   const unlockAudioContext = useCallback(() => {
     try {
@@ -254,9 +227,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const onFirstInteraction = () => {
-      unlockAudioContext();
-    };
+    const onFirstInteraction = () => { unlockAudioContext(); };
     window.addEventListener('pointerdown', onFirstInteraction, { passive: true });
     window.addEventListener('keydown', onFirstInteraction, { passive: true });
     return () => {
@@ -304,36 +275,33 @@ export default function App() {
     }
   }, [unlockAudioContext]);
 
-  const triggerReportNotification = useCallback(
-    (rep) => {
-      if (!rep || !rep.id) return;
-      if (notifiedReportIdsRef.current.has(rep.id)) return;
-      notifiedReportIdsRef.current.add(rep.id);
+  const triggerReportNotification = useCallback((rep) => {
+    if (!rep || !rep.id) return;
+    if (notifiedReportIdsRef.current.has(rep.id)) return;
+    notifiedReportIdsRef.current.add(rep.id);
 
-      const user = currentUserRef.current;
-      if (!user || user.rank_level < 4) return;
+    const user = currentUserRef.current;
+    if (!user || user.rank_level < 4) return;
 
-      const toastId = `${rep.id}-${Date.now()}`;
-      const newToast = {
-        toastId,
-        reportId: rep.id,
-        author_nick: rep.author_nick,
-        author_rank: rep.author_rank,
-        location: rep.location || 'Local não informado',
-        incident_code: rep.incident_code || 'Código 1',
-        outcome: rep.outcome || 'Registrado',
-        created_at: rep.created_at || new Date().toISOString()
-      };
+    const toastId = `${rep.id}-${Date.now()}`;
+    const newToast = {
+      toastId,
+      reportId: rep.id,
+      author_nick: rep.author_nick,
+      author_rank: rep.author_rank,
+      location: rep.location || 'Local não informado',
+      incident_code: rep.incident_code || 'Código 1',
+      outcome: rep.outcome || 'Registrado',
+      created_at: rep.created_at || new Date().toISOString()
+    };
 
-      setReportToasts((prev) => [newToast, ...prev].slice(0, 4));
-      playNotificationSound();
+    setReportToasts((prev) => [newToast, ...prev].slice(0, 4));
+    playNotificationSound();
 
-      setTimeout(() => {
-        setReportToasts((prev) => prev.filter((t) => t.toastId !== toastId));
-      }, 10000);
-    },
-    [playNotificationSound]
-  );
+    setTimeout(() => {
+      setReportToasts((prev) => prev.filter((t) => t.toastId !== toastId));
+    }, 10000);
+  }, [playNotificationSound]);
 
   const dismissToast = (toastId) => {
     setReportToasts((prev) => prev.filter((t) => t.toastId !== toastId));
@@ -365,9 +333,7 @@ export default function App() {
   useEffect(() => {
     try {
       localStorage.setItem('sigp_pantanoria_shift_fines', JSON.stringify(shiftFines));
-    } catch {
-      // ignora erro de armazenamento local
-    }
+    } catch {}
   }, [shiftFines]);
 
   const [citizenSearch, setCitizenSearch] = useState('');
@@ -377,17 +343,7 @@ export default function App() {
   const [vehicleSearch, setVehicleSearch] = useState('');
   const [newVehicle, setNewVehicle] = useState({ plate: '', model: '', color: '', owner_name: '', owner_passport: '', status: 'Regular', notes: '' });
 
-  const [newReport, setNewReport] = useState({
-    report_type: 'OCORRENCIA',
-    vtr_prefix: 'VTR-01',
-    location: 'Túnel de Brookmere',
-    incident_code: 'Código 3',
-    involved_officers: '',
-    involved_citizens: '',
-    description: '',
-    actions_taken: 'Abordagem e algemação',
-    outcome: 'Preso'
-  });
+  const [newReport, setNewReport] = useState({ report_type: 'OCORRENCIA', vtr_prefix: 'VTR-01', location: 'Túnel de Brookmere', incident_code: 'Código 3', involved_officers: '', involved_citizens: '', description: '', actions_taken: 'Abordagem e algemação', outcome: 'Preso' });
   const [reportImage, setReportImage] = useState('');
   const [reportImageName, setReportImageName] = useState('');
   const [cropZoom, setCropZoom] = useState(1);
@@ -402,19 +358,8 @@ export default function App() {
 
   const [dutyFilterOfficer, setDutyFilterOfficer] = useState('TODOS');
   const [dutyFilterStatus, setDutyFilterStatus] = useState('TODOS');
-  const [newOfficer, setNewOfficer] = useState({
-    badge_number: '',
-    roblox_nick: '',
-    rp_name: '',
-    rank_level: 1,
-    pin_code: '1234',
-    status: 'Em Formação'
-  });
-  const [newAnnouncement, setNewAnnouncement] = useState({
-    title: '',
-    category: 'COMUNICADO',
-    content: ''
-  });
+  const [newOfficer, setNewOfficer] = useState({ badge_number: '', roblox_nick: '', rp_name: '', rank_level: 1, pin_code: '1234', status: 'Em Formação' });
+  const [newAnnouncement, setNewAnnouncement] = useState({ title: '', category: 'COMUNICADO', content: '' });
 
   const [selectedArticles, setSelectedArticles] = useState([]);
 
@@ -507,9 +452,7 @@ export default function App() {
   const activeShift = useMemo(() => {
     if (!currentUser) return null;
     return dutyLogs.find(
-      (log) =>
-        (log.officer_id === currentUser.id || log.officer_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase()) &&
-        log.status === 'EM_SERVICO'
+      (log) => (log.officer_id === currentUser.id || log.officer_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase()) && log.status === 'EM_SERVICO'
     );
   }, [dutyLogs, currentUser]);
 
@@ -529,10 +472,7 @@ export default function App() {
     setLoginError('');
     const term = loginIdentifier.trim().toLowerCase();
     const found = officers.find(
-      (o) =>
-        o.roblox_nick.toLowerCase() === term ||
-        o.badge_number.toLowerCase() === term ||
-        o.rp_name.toLowerCase() === term
+      (o) => o.roblox_nick.toLowerCase() === term || o.badge_number.toLowerCase() === term || o.rp_name.toLowerCase() === term
     );
 
     if (!found) {
@@ -593,7 +533,6 @@ export default function App() {
 
   const handleRegisterShiftFine = async () => {
     if (!currentUser || selectedArticles.length === 0) return;
-
     if (!activeShift) {
       setFineFeedback('Inicie o ponto em "Ponto & Patrulha" antes de registrar uma multa no turno.');
       return;
@@ -673,8 +612,7 @@ export default function App() {
         ? `Multas aplicadas (${finesInThisShift.length}): ` +
           finesInThisShift
             .map(
-              (f) =>
-                `${f.artCode} — ${f.artName} ($${f.fine.toLocaleString()} | Alvo: ${f.target})`
+              (f) => `${f.artCode} — ${f.artName} ($${f.fine.toLocaleString()} | Alvo: ${f.target})`
             )
             .join(' | ')
         : '';
@@ -712,11 +650,7 @@ export default function App() {
   const handleAddCitizen = async (e) => {
     e.preventDefault();
     if (!newCitizen.passport || !newCitizen.rp_name) return;
-    const payload = {
-      ...newCitizen,
-      passport: newCitizen.passport.toUpperCase(),
-      criminal_records: []
-    };
+    const payload = { ...newCitizen, passport: newCitizen.passport.toUpperCase(), criminal_records: [] };
     const localItem = { id: crypto.randomUUID(), ...payload };
     setCitizens((prev) => [localItem, ...prev]);
     setNewCitizen({ passport: '', rp_name: '', roblox_nick: '', phone: '', cnh_status: 'Válida', gun_license: false, wanted_status: 'Limpo' });
@@ -737,15 +671,9 @@ export default function App() {
   const handleAddCrimeRecord = async (citizen) => {
     const crimeText = (crimeInput[citizen.id] || '').trim();
     if (!crimeText) return;
-    const newRecord = {
-      date: new Date().toLocaleDateString('pt-BR'),
-      crime: crimeText,
-      officer: `@${currentUser.roblox_nick}`
-    };
+    const newRecord = { date: new Date().toLocaleDateString('pt-BR'), crime: crimeText, officer: `@${currentUser.roblox_nick}` };
     const updatedRecords = [newRecord, ...(citizen.criminal_records || [])];
-    setCitizens((prev) =>
-      prev.map((c) => (c.id === citizen.id ? { ...c, criminal_records: updatedRecords } : c))
-    );
+    setCitizens((prev) => prev.map((c) => (c.id === citizen.id ? { ...c, criminal_records: updatedRecords } : c)));
     setCrimeInput((prev) => ({ ...prev, [citizen.id]: '' }));
 
     if (isSupabaseConfigured && supabase) {
@@ -774,28 +702,27 @@ export default function App() {
     }
   };
 
-  const createCroppedEvidence = (dataUrl, zoom = 1) =>
-    new Promise((resolve, reject) => {
-      if (!dataUrl) return resolve(null);
-      const image = new Image();
-      image.onload = () => {
-        const aspect = 16 / 9;
-        const baseWidth = Math.min(image.width, image.height * aspect);
-        const baseHeight = baseWidth / aspect;
-        const sourceWidth = baseWidth / zoom;
-        const sourceHeight = baseHeight / zoom;
-        const sx = (image.width - sourceWidth) / 2;
-        const sy = (image.height - sourceHeight) / 2;
-        const canvas = document.createElement('canvas');
-        canvas.width = 1280;
-        canvas.height = 720;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(image, sx, sy, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
-      };
-      image.onerror = reject;
-      image.src = dataUrl;
-    });
+  const createCroppedEvidence = (dataUrl, zoom = 1) => new Promise((resolve, reject) => {
+    if (!dataUrl) return resolve(null);
+    const image = new Image();
+    image.onload = () => {
+      const aspect = 16 / 9;
+      const baseWidth = Math.min(image.width, image.height * aspect);
+      const baseHeight = baseWidth / aspect;
+      const sourceWidth = baseWidth / zoom;
+      const sourceHeight = baseHeight / zoom;
+      const sx = (image.width - sourceWidth) / 2;
+      const sy = (image.height - sourceHeight) / 2;
+      const canvas = document.createElement('canvas');
+      canvas.width = 1280;
+      canvas.height = 720;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(image, sx, sy, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    image.onerror = reject;
+    image.src = dataUrl;
+  });
 
   const handleAddReport = async (e) => {
     e.preventDefault();
@@ -807,7 +734,7 @@ export default function App() {
     ];
     const missingField = requiredFields.find(([, value]) => !String(value || '').trim());
     if (missingField) {
-      window.alert(`Preencha o campo obrigatório: ${missingField[0]}.`);
+      window.alert(`Preencha o campo obrigatório: ${missingField}.`);
       return;
     }
     if (String(newReport.description).trim().length < 20) {
@@ -846,7 +773,7 @@ export default function App() {
       const { data, error } = await supabase.from('pm_reports').insert([payload]).select().single();
       if (error || !data) {
         console.error('Falha ao salvar relatório:', error);
-        window.alert(`Não foi possível salvar o relatório no banco de dados. Seus dados continuam no formulário. ${error?.message || ''}`);
+        window.alert(`Não foi possível salvar o relatório no banco de dados. ${error?.message || ''}`);
         return;
       }
       savedReport = data;
@@ -929,9 +856,7 @@ export default function App() {
   };
 
   const handleDeleteReport = async (report) => {
-    const isAuthor =
-      currentUser &&
-      report.author_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase();
+    const isAuthor = currentUser && report.author_nick.toLowerCase() === currentUser.roblox_nick.toLowerCase();
     if (!isHighRank && !isAuthor) return;
 
     const confirmed = window.confirm(
@@ -958,54 +883,56 @@ export default function App() {
       setTimeout(() => setCopiedId(null), 2200);
     } catch (error) {
       console.error('Falha ao copiar relatório:', error);
-      window.alert('Não foi possível copiar automaticamente. Verifique a permissão de área de transferência do navegador.');
+      window.alert('Não foi possível copiar automaticamente.');
     }
   };
 
   const formatReportForDiscord = (r) => {
     const statusLabel = r.review_status || 'PENDENTE';
-    const parecerLinha = r.reviewed_by
-      ? `\n• **Parecer (${statusLabel} por @${r.reviewed_by}):** ${r.review_notes || 'Sem observações'}`
+    const parecerLinha = r.reviewed_by 
+      ? `\n• **Parecer (${statusLabel} por @${r.reviewed_by}):** ${r.review_notes || 'Sem observações'}` 
       : `\n• **Status Comando:** ${statusLabel}`;
 
     return `🚓 **RELATÓRIO PÓS-OCORRÊNCIA — POLÍCIA MILITAR DE CAPITAL VILLE**
-- **Responsável:** @${r.author_nick}
-- **Patente:** @${r.author_rank}
-- **Data e horário:** ${formatDateTime(r.created_at)}
-- **Local da ocorrência:** ${r.location || 'Não informado'}
-- **Viatura:** ${r.vtr_prefix || 'Caracterizada'}
-- **Policiais envolvidos:** ${r.involved_officers || 'Nenhum'}
+
+*   **Responsável:**  @${r.author_nick}
+*   **Patente:**  ${r.author_rank}
+*   **Data e horário:**  ${formatDateTime(r.created_at)}
+*   **Local da ocorrência:**  ${r.location || 'Não informado'}
+*   **Viatura:**  ${r.vtr_prefix || 'Caracterizada'}
+*   **Policiais envolvidos:**  ${r.involved_officers || 'Nenhum'}
 
 **INFORMAÇÕES DA OCORRÊNCIA**
-- **Natureza do registro:** ${r.report_type || 'OCORRENCIA'}
-- **Código operacional:** ${r.incident_code || 'Código 1'}
-- **Pessoas envolvidas:** ${r.involved_citizens || 'Não identificado'}
-- **Descrição resumida:** ${r.description}
-- **Providências tomadas:** ${r.actions_taken || 'Nenhuma'}
-- **Resultado final:** ${r.outcome || 'Concluído'}${parecerLinha}
+*   **Natureza do registro:**  ${r.report_type || 'OCORRENCIA'}
+*   **Código operacional:**  ${r.incident_code || 'Código 1'}
+*   **Pessoas envolvidas:**  ${r.involved_citizens || 'Não identificado'}
+*   **Descrição resumida:**  ${r.description}
+*   **Providências tomadas:**  ${r.actions_taken || 'Nenhuma'}
+*   **Resultado final:**  ${r.outcome || 'Concluído'}${parecerLinha}
 
-**Assinatura do responsável:** ${r.author_nick}`;
+**Assinatura do responsável:**  ${r.author_nick}`;
   };
 
   const formatDutyForDiscord = (d) => {
-    return `🚓 **SERVIÇO OPERACIONAL — POLÍCIA MILITAR DE CAPITAL VILLE**
-- **Responsável:** @${d.officer_nick} (${d.badge_number})
-- **Patente:** @${d.officer_rank}
-- **Início do Turno:** ${formatDateTime(d.started_at)}
-- **Término do Turno:** ${d.ended_at ? formatDateTime(d.ended_at) : 'EM ANDAMENTO'}
-- **Tempo Patrulhado:** ${formatDuration(d.duration_seconds)}
-- **Prefixo da VTR:** ${d.vtr_prefix}
-- **Área de Patrulhamento:** ${d.patrol_area || 'GV e Horton'}
+    return `🚓  **SERVIÇO OPERACIONAL — POLÍCIA MILITAR DE CAPITAL VILLE**
+
+*   **Responsável:**  @${d.officer_nick} (${d.badge_number})
+*   **Patente:**  ${d.officer_rank}
+*   **Início do Turno:**  ${formatDateTime(d.started_at)}
+*   **Término do Turno:**  ${d.ended_at ? formatDateTime(d.ended_at) : 'EM ANDAMENTO'}
+*   **Tempo Patrulhado:**  ${formatDuration(d.duration_seconds)}
+*   **Prefixo da VTR:**  ${d.vtr_prefix}
+*   **Área de Patrulhamento:**  ${d.patrol_area || 'GV e Horton'}
 
 **RESUMO DO SERVIÇO**
-- **Observações:** ${d.summary_notes || 'Sem alterações'}
-- **Assinatura do responsável:** ${d.officer_nick}`;
+*   **Observações:**  ${d.summary_notes || 'Sem alterações'}
+*   **Assinatura do responsável:**  ${d.officer_nick}`;
   };
 
   const handleAddOfficer = async (e) => {
     e.preventDefault();
     if (!isHighCommand || !newOfficer.badge_number || !newOfficer.roblox_nick) return;
-    const rankObj = RANKS.find((r) => r.level === Number(newOfficer.rank_level)) || RANKS[4];
+    const rankObj = RANKS.find((r) => r.level === Number(newOfficer.rank_level)) || RANKS;
     const payload = {
       badge_number: newOfficer.badge_number.toUpperCase(),
       roblox_nick: newOfficer.roblox_nick.trim(),
@@ -1026,51 +953,10 @@ export default function App() {
     }
   };
 
-  const handleChangeOfficerRank = async (officer, delta) => {
-    if (!isTopCommand) return;
-    const nextLevel = Math.min(5, Math.max(1, officer.rank_level + delta));
-    const rankObj = RANKS.find((r) => r.level === nextLevel);
-    if (!rankObj) return;
-
-    setOfficers((prev) =>
-      prev
-        .map((o) => (o.id === officer.id ? { ...o, rank_level: nextLevel, rank_name: rankObj.name } : o))
-        .sort((a, b) => b.rank_level - a.rank_level)
-    );
-
-    if (isSupabaseConfigured && supabase) {
-      await supabase
-        .from('pm_officers')
-        .update({ rank_level: nextLevel, rank_name: rankObj.name })
-        .eq('id', officer.id);
-    }
-  };
-
-  const handleToggleOfficerWarning = async (officer, delta) => {
-    if (!isHighCommand) return;
-    const nextWarnings = Math.max(0, (officer.warnings || 0) + delta);
-    setOfficers((prev) => prev.map((o) => (o.id === officer.id ? { ...o, warnings: nextWarnings } : o)));
-    if (isSupabaseConfigured && supabase) {
-      await supabase.from('pm_officers').update({ warnings: nextWarnings }).eq('id', officer.id);
-    }
-  };
-
-  const handleUpdateOfficerStatus = async (officer, status) => {
-    if (!isTopCommand) return;
-    setOfficers((prev) => prev.map((o) => (o.id === officer.id ? { ...o, status } : o)));
-    if (isSupabaseConfigured && supabase) {
-      await supabase.from('pm_officers').update({ status }).eq('id', officer.id);
-    }
-  };
-
   const handleAddAnnouncement = async (e) => {
     e.preventDefault();
     if (!isHighCommand || !newAnnouncement.title || !newAnnouncement.content) return;
-    const payload = {
-      ...newAnnouncement,
-      author_nick: currentUser.roblox_nick,
-      created_at: new Date().toISOString()
-    };
+    const payload = { ...newAnnouncement, author_nick: currentUser.roblox_nick, created_at: new Date().toISOString() };
     const localItem = { id: crypto.randomUUID(), ...payload };
     setAnnouncements((prev) => [localItem, ...prev]);
     setNewAnnouncement({ title: '', category: 'COMUNICADO', content: '' });
@@ -1084,10 +970,7 @@ export default function App() {
 
   const handleDeleteAnnouncement = async (announcement) => {
     if (!isHighCommand || !announcement?.id) return;
-
-    const confirmed = window.confirm(
-      `Apagar permanentemente o comunicado "${announcement.title}"?`
-    );
+    const confirmed = window.confirm(`Apagar permanentemente o comunicado "${announcement.title}"?`);
     if (!confirmed) return;
 
     if (isSupabaseConfigured && supabase) {
@@ -1098,7 +981,6 @@ export default function App() {
         return;
       }
     }
-
     setAnnouncements((prev) => prev.filter((a) => a.id !== announcement.id));
   };
 
@@ -1106,10 +988,7 @@ export default function App() {
     const q = (globalSearch || citizenSearch).toLowerCase().trim();
     if (!q) return citizens;
     return citizens.filter(
-      (c) =>
-        c.rp_name.toLowerCase().includes(q) ||
-        c.passport.toLowerCase().includes(q) ||
-        (c.roblox_nick || '').toLowerCase().includes(q)
+      (c) => c.rp_name.toLowerCase().includes(q) || c.passport.toLowerCase().includes(q) || (c.roblox_nick || '').toLowerCase().includes(q)
     );
   }, [citizens, citizenSearch, globalSearch]);
 
@@ -1117,11 +996,7 @@ export default function App() {
     const q = (globalSearch || vehicleSearch).toLowerCase().trim();
     if (!q) return vehicles;
     return vehicles.filter(
-      (v) =>
-        v.plate.toLowerCase().includes(q) ||
-        v.model.toLowerCase().includes(q) ||
-        v.owner_name.toLowerCase().includes(q) ||
-        (v.owner_passport || '').toLowerCase().includes(q)
+      (v) => v.plate.toLowerCase().includes(q) || v.model.toLowerCase().includes(q) || v.owner_name.toLowerCase().includes(q) || (v.owner_passport || '').toLowerCase().includes(q)
     );
   }, [vehicles, vehicleSearch, globalSearch]);
 
@@ -1148,6 +1023,7 @@ export default function App() {
     [reports]
   );
 
+  // --- TELA DE LOGIN ---
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -1155,7 +1031,6 @@ export default function App() {
 
         <div className="w-full max-w-md z-10">
           <div className="bg-slate-900/95 border border-slate-700/80 rounded-2xl shadow-2xl p-8 backdrop-blur-md">
-
             <div className="flex flex-col items-center text-center mb-6">
               <div className="w-16 h-16 rounded-2xl bg-blue-600/20 border border-blue-500/40 shadow-lg shadow-blue-900/40 flex items-center justify-center mb-4">
                 <Shield className="w-9 h-9 text-blue-400" />
@@ -1173,7 +1048,7 @@ export default function App() {
               <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-2">
                 <Database className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>
-                  Modo demonstração local ativo. Configure as variáveis do <strong>Supabase</strong> na Vercel para persistir dados na nuvem.
+                  Modo demonstração local ativo. Configure as variáveis do <strong>Supabase</strong> para persistir dados na nuvem.
                 </span>
               </div>
             )}
@@ -1188,7 +1063,7 @@ export default function App() {
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Felipe, Tsantos ou PM-001"
+                    placeholder="Ex: Santos, Joao ou PM-001"
                     value={loginIdentifier}
                     onChange={(e) => setLoginIdentifier(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
@@ -1229,44 +1104,27 @@ export default function App() {
               </button>
             </form>
 
+            {/* Acesso Rápido Atualizado: Apenas Santos e João */}
             <div className="mt-6 pt-5 border-t border-slate-800">
               <p className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-2.5 text-center">
-                Acesso Rápido (Testes / Comando)
+                Acesso Rápido (Comando)
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => { setLoginIdentifier('Felipe'); setLoginPin('2026'); }}
+                  onClick={() => { setLoginIdentifier('Santos'); setLoginPin('1900'); }}
                   className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 transition"
                 >
-                  <div className="text-xs font-bold text-amber-400">Cmdt. Felipe</div>
+                  <div className="text-xs font-bold text-amber-400">Cmdt. Santos</div>
                   <div className="text-[10px] text-slate-400">Comandante-Geral</div>
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setLoginIdentifier('Tsantos'); setLoginPin('1900'); }}
+                  onClick={() => { setLoginIdentifier('Joao'); setLoginPin('2026'); }}
                   className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 transition"
                 >
-                  <div className="text-xs font-bold text-blue-400">
-                    Subcmdt. Tsantos
-                  </div>
+                  <div className="text-xs font-bold text-blue-400">Cmdt. João</div>
                   <div className="text-[10px] text-slate-400">Subcomandante</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setLoginIdentifier('lucero'); setLoginPin('1903'); }}
-                  className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 transition"
-                >
-                  <div className="text-xs font-bold text-cyan-400">Sup. Lucero</div>
-                  <div className="text-[10px] text-slate-400">Supervisor Operacional</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setLoginIdentifier('krussttelles'); setLoginPin('1234'); }}
-                  className="text-left p-2.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 transition"
-                >
-                  <div className="text-xs font-bold text-slate-200">Sd. Krussttelles</div>
-                  <div className="text-[10px] text-slate-400">Policial Militar</div>
                 </button>
               </div>
             </div>
@@ -1276,30 +1134,26 @@ export default function App() {
     );
   }
 
-  const elapsedSeconds = activeShift
-    ? Math.floor((nowTick - new Date(activeShift.started_at).getTime()) / 1000)
-    : 0;
+  const elapsedSeconds = activeShift ? Math.floor((nowTick - new Date(activeShift.started_at).getTime()) / 1000) : 0;
 
+  // --- INTERFACE PRINCIPAL ---
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-30">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+      <header className="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-40 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shrink-0">
-              <Shield className="w-6 h-6 text-blue-400" />
+            <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold">
+              <Shield className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-white tracking-tight">SIGP CAPITAL VILLE</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                  RP MILITAR
+                <h1 className="font-extrabold text-white text-base tracking-tight">SIGP PM</h1>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 font-semibold">
+                  CAPITAL VILLE
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Oficial: <strong className="text-slate-200">{currentUser.rp_name}</strong> (@{currentUser.roblox_nick}) •{' '}
-                <span className="text-amber-400 font-semibold">
-                  {currentUser.rank_name}
-                </span>
+                {currentUser.rp_name} ({currentUser.badge_number}) • <strong className="text-slate-200">{currentUser.rank_name}</strong>
               </p>
             </div>
           </div>
@@ -1478,11 +1332,11 @@ export default function App() {
             <Megaphone className="w-3.5 h-3.5" />
             Hierarquia & Mural
           </button>
-
         </div>
       </header>
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+        {/* TAB ALTO COMANDO */}
         {activeTab === 'comando' && isHighCommand && (
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-amber-500/15 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
@@ -1552,13 +1406,9 @@ export default function App() {
                     </div>
                     <span className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-bold text-amber-300 flex items-center gap-1.5">
                       {cmdReportsFolderOpen ? (
-                        <>
-                          Ocultar Pasta <ChevronUp className="w-4 h-4" />
-                        </>
+                        <>Ocultar Pasta <ChevronUp className="w-4 h-4" /></>
                       ) : (
-                        <>
-                          Abrir Pasta <ChevronDown className="w-4 h-4" />
-                        </>
+                        <>Abrir Pasta <ChevronDown className="w-4 h-4" /></>
                       )}
                     </span>
                   </div>
@@ -1568,7 +1418,7 @@ export default function App() {
                   <div className="px-5 pb-5 pt-2 border-t border-slate-800/80 space-y-4 bg-slate-950/40">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-xs text-slate-400">
-                        Filtre os relatórios para avaliar ou apagar ocorrências já encerradas.
+                        Filtre os relatórios para avaliar ou apagar ocorrências.
                       </span>
                       <select
                         value={cmdReportFilterStatus}
@@ -1771,6 +1621,7 @@ export default function App() {
           </div>
         )}
 
+        {/* TAB OPERACIONAL */}
         {activeTab === 'operacional' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1781,7 +1632,7 @@ export default function App() {
                     Controle de Ponto Eletrônico
                   </h2>
                   <p className="text-xs text-slate-400">
-                    Registre o início e o término do seu patrulhamento. Multas aplicadas durante o turno entram automaticamente nas observações ao encerrar.
+                    Registre o início e o término do seu patrulhamento.
                   </p>
                 </div>
 
@@ -1845,7 +1696,7 @@ export default function App() {
                         rows={3}
                         value={shiftSummary}
                         onChange={(e) => setShiftSummary(e.target.value)}
-                        placeholder="Ex: Patrulhamento em GV e Horton, abordagem a suspeito, apoio em ocorrência..."
+                        placeholder="Ex: Patrulhamento em GV e Horton, abordagem a suspeito..."
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white"
                       />
                     </div>
@@ -1870,9 +1721,6 @@ export default function App() {
                             </li>
                           ))}
                         </ul>
-                        <p className="text-[11px] text-slate-400 pt-1">
-                          Estas autuações serão anexadas automaticamente às observações ao encerrar o serviço.
-                        </p>
                       </div>
                     )}
 
@@ -1970,7 +1818,7 @@ export default function App() {
                       Auditoria Completa de Turnos / Ponto ({dutyLogs.length} registros)
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Acompanhe horários exatos de entrada, saída, tempo patrulhado e observações/multas de cada policial.
+                      Acompanhe horários exatos de entrada, saída e tempo patrulhado.
                     </p>
                   </div>
 
@@ -2073,6 +1921,7 @@ export default function App() {
           </div>
         )}
 
+        {/* TAB INFOPEN */}
         {activeTab === 'infopen' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
@@ -2255,6 +2104,7 @@ export default function App() {
           </div>
         )}
 
+        {/* TAB RENAVAM */}
         {activeTab === 'veiculos' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
@@ -2382,6 +2232,7 @@ export default function App() {
           </div>
         )}
 
+        {/* TAB RELATÓRIOS */}
         {activeTab === 'relatorios' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-fit">
@@ -2448,7 +2299,7 @@ export default function App() {
                   <label className="block text-slate-400 mb-1">Policiais Envolvidos</label>
                   <input
                     type="text"
-                    placeholder="Ex: @Krustelles_22 @wyzontheradar"
+                    placeholder="Ex: @Santos @Joao"
                     value={newReport.involved_officers}
                     onChange={(e) => setNewReport({ ...newReport, involved_officers: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
@@ -2473,24 +2324,24 @@ export default function App() {
                     required
                     minLength={20}
                     maxLength={3000}
-                    placeholder="Registre os fatos em ordem cronológica: situação inicial, ações dos envolvidos, intervenção policial e desfecho..."
+                    placeholder="Registre os fatos em ordem cronológica: situação inicial, intervenção e desfecho..."
                     value={newReport.description}
                     onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white"
                   />
-                  <div className="text-right text-[10px] text-slate-500">{newReport.description.length}/3000 caracteres (mínimo 20)</div>
+                  <div className="text-right text-[10px] text-slate-500">{newReport.description.length}/3000 caracteres</div>
                 </div>
 
                 <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/70 p-3 space-y-3">
                   <div>
                     <label className="block text-slate-200 font-semibold mb-1">Evidência da ocorrência (print)</label>
-                    <p className="text-[11px] text-slate-500">Envie uma imagem do computador. O recorte será ajustado para 16:9 antes de anexar ao relatório.</p>
+                    <p className="text-[11px] text-slate-500">Envie uma imagem do computador (16:9).</p>
                   </div>
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/webp"
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
+                      const file = e.target.files?.;
                       if (!file) return;
                       if (file.size > 8 * 1024 * 1024) {
                         window.alert('A imagem deve ter no máximo 8 MB.');
@@ -2587,16 +2438,16 @@ export default function App() {
                   </div>
                 ))}
               </div>
+
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs text-slate-300">
                   {isHighRank ? (
                     <>
-                      <strong className="text-amber-400">Visão de Comando:</strong> Você visualiza todos os relatórios e pode{' '}
-                      <strong className="text-white">Aprovar</strong>, <strong className="text-white">Reprovar</strong> ou <strong className="text-white">Apagar</strong>.
+                      <strong className="text-amber-400">Visão de Comando:</strong> Você visualiza todos os relatórios.
                     </>
                   ) : (
                     <>
-                      <strong className="text-blue-400">Acesso Restrito:</strong> Você visualiza apenas os relatórios enviados por você.
+                      <strong className="text-blue-400">Acesso Restrito:</strong> Você visualiza apenas seus relatórios.
                     </>
                   )}
                 </div>
@@ -2604,23 +2455,9 @@ export default function App() {
                   type="search"
                   value={reportSearch}
                   onChange={(e) => setReportSearch(e.target.value)}
-                  placeholder="Buscar por local, policial, envolvido ou descrição..."
+                  placeholder="Buscar..."
                   className="min-w-[220px] flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
                 />
-                <select
-                  value={reportFilterType}
-                  onChange={(e) => setReportFilterType(e.target.value)}
-                  style={{ colorScheme: 'dark' }}
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
-                >
-                  <option value="TODOS">Todas as naturezas</option>
-                  <option value="OCORRENCIA">Ocorrência</option>
-                  <option value="ABORDAGEM">Abordagem</option>
-                  <option value="PERSEGUICAO">Perseguição</option>
-                  <option value="APREENSAO">Apreensão</option>
-                  <option value="APOIO">Apoio</option>
-                  <option value="OUTRO">Outro</option>
-                </select>
                 <select
                   value={reportFilterStatus}
                   onChange={(e) => setReportFilterStatus(e.target.value)}
@@ -2636,11 +2473,8 @@ export default function App() {
 
               {reports
                 .filter((rep) => {
-                  const canView =
-                    isHighRank ||
-                    (rep.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase();
+                  const canView = isHighRank || (rep.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase();
                   if (!canView) return false;
-
                   const status = rep.review_status || 'PENDENTE';
                   const matchesStatus = reportFilterStatus === 'TODOS' || status === reportFilterStatus;
                   const matchesType = reportFilterType === 'TODOS' || (rep.report_type || 'OCORRENCIA') === reportFilterType;
@@ -2650,8 +2484,7 @@ export default function App() {
                 })
                 .map((rep) => {
                   const status = rep.review_status || 'PENDENTE';
-                  const isAuthor =
-                    (rep.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase();
+                  const isAuthor = (rep.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase();
                   const canDelete = isHighRank || isAuthor;
 
                   return (
@@ -2672,7 +2505,6 @@ export default function App() {
                           >
                             {status}
                           </span>
-                          <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold">{({ OCORRENCIA: 'OCORRÊNCIA', ABORDAGEM: 'ABORDAGEM', PERSEGUICAO: 'PERSEGUIÇÃO', APREENSAO: 'APREENSÃO', APOIO: 'APOIO', OUTRO: 'OUTRO' })[rep.report_type] || 'OCORRÊNCIA'}</span>
                           <span className="font-bold text-white text-sm">{rep.location}</span>
                         </div>
 
@@ -2699,24 +2531,17 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                        <div className="rounded-lg bg-slate-950 border border-slate-800 p-2"><span className="text-slate-500">Viatura</span><div className="text-slate-200 font-semibold">{rep.vtr_prefix || 'Não informada'}</div></div>
-                        <div className="rounded-lg bg-slate-950 border border-slate-800 p-2"><span className="text-slate-500">Código operacional</span><div className="text-slate-200 font-semibold">{rep.incident_code || 'Não informado'}</div></div>
-                        <div className="rounded-lg bg-slate-950 border border-slate-800 p-2"><span className="text-slate-500">Policiais envolvidos</span><div className="text-slate-200">{rep.involved_officers || 'Não informado'}</div></div>
-                        <div className="rounded-lg bg-slate-950 border border-slate-800 p-2"><span className="text-slate-500">Providências</span><div className="text-slate-200">{rep.actions_taken || 'Não informado'}</div></div>
-                      </div>
                       <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800 whitespace-pre-wrap">
                         {rep.description}
                       </p>
                       {rep.evidence_image && (
                         <a href={rep.evidence_image} target="_blank" rel="noreferrer" className="block">
-                          <img src={rep.evidence_image} alt="Evidência anexada à ocorrência" className="w-full max-h-72 object-contain rounded-lg border border-slate-700 bg-black" />
+                          <img src={rep.evidence_image} alt="Evidência anexada" className="w-full max-h-72 object-contain rounded-lg border border-slate-700 bg-black" />
                         </a>
                       )}
 
                       <div className="flex flex-wrap justify-between gap-2 text-[11px] text-slate-400">
                         <span>Responsável: <strong className="text-slate-200">@{rep.author_nick}</strong> ({rep.author_rank})</span>
-                        <span>Envolvidos: <strong className="text-slate-200">{rep.involved_citizens || 'N/A'}</strong></span>
                         <span>Resultado: <strong className="text-emerald-400">{rep.outcome}</strong></span>
                         <span className="font-mono">{formatDateTime(rep.created_at)}</span>
                       </div>
@@ -2769,6 +2594,7 @@ export default function App() {
           </div>
         )}
 
+        {/* TAB CÓDIGO PENAL */}
         {activeTab === 'codigo-penal' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
@@ -2847,7 +2673,7 @@ export default function App() {
               <div className="pt-2 border-t border-slate-800 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between">
                   <label className="text-slate-300 font-semibold">
-                    Passaporte, Nome ou Placa do Autuado
+                    Autuado (Passaporte, Nome ou Placa)
                   </label>
                   <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
                     activeShift
@@ -2859,7 +2685,7 @@ export default function App() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Ex: PTN-1001, Nickolas Silva ou PTN-9X88"
+                  placeholder="Ex: PTN-1001 ou Nickolas Silva"
                   value={fineTarget}
                   onChange={(e) => setFineTarget(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
@@ -2893,6 +2719,7 @@ export default function App() {
           </div>
         )}
 
+        {/* TAB HIERARQUIA & MURAL */}
         {activeTab === 'hierarquia' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             <div className="space-y-5">
@@ -2911,7 +2738,7 @@ export default function App() {
                     <input
                       type="text"
                       required
-                      placeholder="Título (Ex: PARAMETRIZAÇÃO — RECRUTA...)"
+                      placeholder="Título da Publicação"
                       value={newAnnouncement.title}
                       onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
                       className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/60 rounded-xl px-3.5 py-2.5 text-white focus:outline-none transition"
@@ -3037,6 +2864,7 @@ export default function App() {
         )}
       </main>
 
+      {/* TOAST NOTIFICAÇÕES */}
       {isHighRank && reportToasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-50 w-full max-w-sm space-y-2.5 pointer-events-none px-4 sm:px-0">
           {reportToasts.map((toast) => (
@@ -3100,3 +2928,4 @@ export default function App() {
     </div>
   );
 }
+```
