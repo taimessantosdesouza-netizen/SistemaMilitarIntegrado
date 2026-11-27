@@ -15,7 +15,7 @@ import { INITIAL_DUTY_LOGS } from './constants/dutyLogs';
 import { INITIAL_ANNOUNCEMENTS } from './constants/announcements';
 import { PENAL_ARTICLES } from './constants/penalArticles';
 import { RANKS } from './constants/ranks';
-import { formatDateTime } from './utils/formatters';
+import { formatDateTime, formatDuration } from './utils/formatters';
 
 function formatDuration(seconds) {
   const sec = Math.max(0, Math.floor(seconds || 0));
