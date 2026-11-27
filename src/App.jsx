@@ -15,19 +15,7 @@ import { INITIAL_DUTY_LOGS } from './constants/dutyLogs';
 import { INITIAL_ANNOUNCEMENTS } from './constants/announcements';
 import { PENAL_ARTICLES } from './constants/penalArticles';
 import { RANKS } from './constants/ranks';
-
-function formatDateTime(isoString) {
-  if (!isoString) return '—';
-  const d = new Date(isoString);
-  return d.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
-}
+import { formatDateTime } from './utils/formatters';
 
 function formatDuration(seconds) {
   const sec = Math.max(0, Math.floor(seconds || 0));
