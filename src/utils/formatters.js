@@ -10,3 +10,11 @@ export function formatDateTime(isoString) {
     second: '2-digit'
   });
 }
+
+export function formatDuration(seconds) {
+  const sec = Math.max(0, Math.floor(seconds || 0));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  return `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+}
