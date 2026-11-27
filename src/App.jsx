@@ -1006,7 +1006,8 @@ if (!currentUser) {
 />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
- 
+        
+{activeTab === 'comando' && isHighCommand && (
   <AltoComando
     currentUser={currentUser}
     activeShiftsAll={activeShiftsAll}
