@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import {
-  Shield, Lock, LogOut, Radio, Users, Car, FileText, AlertTriangle,
-  CheckCircle2, Clock, Search, Plus, Copy, Check, Award,
-  UserCheck, KeyRound, Scale, Megaphone, Database,
-  Activity, ShieldAlert, Folder, FolderOpen, Trash2, ChevronDown, ChevronUp,
-  Bell, X, Volume2, ArrowLeft
-} from 'lucide-react';
+import { Bell, X } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { INITIAL_OFFICERS } from './constants/officers';
 import { INITIAL_CITIZENS } from './constants/citizens';
