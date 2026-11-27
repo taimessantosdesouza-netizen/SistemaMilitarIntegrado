@@ -467,7 +467,7 @@ export default function App() {
         const todayStr = new Date().toLocaleDateString('pt-BR');
         const newCrimeRecords = chosen.map((art) => ({
           date: todayStr,
-          crime: `Multa/Autuação: ${art.code} — ${art.name} ($${(art.fine ?? 0).toLocaleString()})`,
+          crime: `Multa/Autuação: ${art.code} — ${art.name} <div className="text-emerald-400">${(art.fine ?? 0).toLocaleString()}</div>
           officer: `@${currentUser.roblox_nick}`,
         }));
         const updatedRecords = [...newCrimeRecords, ...(matchedCitizen.criminal_records || [])];
