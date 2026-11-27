@@ -12,34 +12,9 @@ import { INITIAL_CITIZENS } from './constants/citizens';
 import { INITIAL_VEHICLES } from './constants/vehicles';
 import { INITIAL_REPORTS } from './constants/reports';
 import { INITIAL_DUTY_LOGS } from './constants/dutyLogs';
-
-const INITIAL_ANNOUNCEMENTS = [
-  {
-    id: 'a1',
-    title: 'PARAMETRIZAÇÃO — RECRUTA CORRÊA',
-    category: 'PARAMETRIZACAO',
-    content: 'O candidato Corrêa (@wyzontheradar) obteve a nota 9,1/10, demonstrando excelente desempenho no processo seletivo, respeito à hierarquia e conhecimento institucional. Bem-vindo à corporação!',
-    author_nick: 'Felipe',
-    created_at: '2026-11-24T00:31:00-03:00'
-  }
-];
-
-const PENAL_ARTICLES = [
-  { id: 'art1', code: 'Art. 121', name: 'Homicídio / Tentativa contra Oficial PM', months: 60, fine: 25000, bail: false },
-  { id: 'art2', code: 'Art. 157', name: 'Roubo a Mão Armada / Latrocínio', months: 40, fine: 15000, bail: false },
-  { id: 'art3', code: 'Art. 329', name: 'Resistência / Desobediência à Ordem Policial', months: 15, fine: 4000, bail: true },
-  { id: 'art4', code: 'Art. 330', name: 'Fuga em Alta Velocidade / Direção Perigosa', months: 20, fine: 6500, bail: true },
-  { id: 'art5', code: 'Art. 14', name: 'Porte Ilegal de Armamento Restrito', months: 30, fine: 12000, bail: false },
-  { id: 'art6', code: 'Art. 180', name: 'Receptação / Condução de Veículo Roubado', months: 20, fine: 5000, bail: true },
-];
-
-const RANKS = [
-  { level: 5, name: 'Comandante-Geral', desc: 'Autoridade máxima da Polícia Militar, responsável pelo comando e decisões gerais da Instituição.' },
-  { level: 4, name: 'Subcomandante', desc: 'Auxilia o Comandante-Geral e acompanha a administração e organização da corporação.' },
-  { level: 3, name: 'Supervisor Operacional', desc: 'Responsável por acompanhar e organizar as atividades operacionais dos policiais.' },
-  { level: 2, name: 'Policial Militar', desc: 'Integrante efetivo responsável pelas atividades de policiamento e serviços operacionais no RP.' },
-  { level: 1, name: 'Recruta', desc: 'Integrante em fase de formação e avaliação para ingresso efetivo na corporação.' },
-];
+import { INITIAL_ANNOUNCEMENTS } from './constants/announcements';
+import { PENAL_ARTICLES } from './constants/penalArticles';
+import { RANKS } from './constants/ranks';
 
 function formatDateTime(isoString) {
   if (!isoString) return '—';
