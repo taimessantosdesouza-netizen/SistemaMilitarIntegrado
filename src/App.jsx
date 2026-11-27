@@ -7,15 +7,7 @@ import {
   Bell, X, Volume2, ArrowLeft
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
-
-const INITIAL_OFFICERS = [
-  { id: '1', badge_number: 'PM-001', roblox_nick: 'Felipe', rp_name: 'Cmdt. Felipe', rank_level: 5, rank_name: 'Comandante-Geral', pin_code: '2026', status: 'Ativo', warnings: 0 },
-  { id: '2', badge_number: 'PM-002', roblox_nick: 'Tsantos', rp_name: 'Subcmdt. T. Santos', rank_level: 4, rank_name: 'Subcomandante', pin_code: '1900', status: 'Ativo', warnings: 0 },
-  { id: '3', badge_number: 'PM-003', roblox_nick: 'lucero', rp_name: 'Sup. Lucero', rank_level: 3, rank_name: 'Supervisor Operacional', pin_code: '1903', status: 'Ativo', warnings: 0 },
-  { id: '4', badge_number: 'PM-004', roblox_nick: 'krussttelles', rp_name: 'Sd. Krussttelles', rank_level: 2, rank_name: 'Policial Militar', pin_code: '1234', status: 'Ativo', warnings: 0 },
-  { id: '5', badge_number: 'PM-005', roblox_nick: 'Krustelles_22', rp_name: 'Sd. Krustelles', rank_level: 2, rank_name: 'Policial Militar', pin_code: '1234', status: 'Ativo', warnings: 0 },
-  { id: '6', badge_number: 'PM-006', roblox_nick: 'wyzontheradar', rp_name: 'Rec. Corrêa', rank_level: 1, rank_name: 'Recruta', pin_code: '0000', status: 'Em Formação', warnings: 0 },
-];
+import { INITIAL_OFFICERS } from './constants/officers';
 
 const INITIAL_DUTY_LOGS = [
   {
