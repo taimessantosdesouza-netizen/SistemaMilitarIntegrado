@@ -17,6 +17,7 @@ import { PENAL_ARTICLES } from './constants/penalArticles';
 import { RANKS } from './constants/ranks';
 import { formatDateTime, formatDuration } from './utils/formatters';
 import Login from './pages/Login';
+import { createCroppedEvidence } from './utils/imageCropper';
 
 export default function App() {
   // Este portal agora atende exclusivamente à Polícia Militar.
@@ -604,29 +605,6 @@ export default function App() {
       await supabase.from('pm_vehicles').update({ status }).eq('id', vehicle.id);
     }
   };
-
-  const createCroppedEvidence = (dataUrl, zoom = 1) =>
-    new Promise((resolve, reject) => {
-      if (!dataUrl) return resolve(null);
-      const image = new Image();
-      image.onload = () => {
-        const aspect = 16 / 9;
-        const baseWidth = Math.min(image.width, image.height * aspect);
-        const baseHeight = baseWidth / aspect;
-        const sourceWidth = baseWidth / zoom;
-        const sourceHeight = baseHeight / zoom;
-        const sx = (image.width - sourceWidth) / 2;
-        const sy = (image.height - sourceHeight) / 2;
-        const canvas = document.createElement('canvas');
-        canvas.width = 1280;
-        canvas.height = 720;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(image, sx, sy, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
-      };
-      image.onerror = reject;
-      image.src = dataUrl;
-    });
 
   const handleAddReport = async (e) => {
     e.preventDefault();
