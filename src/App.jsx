@@ -467,7 +467,7 @@ export default function App() {
         const todayStr = new Date().toLocaleDateString('pt-BR');
         const newCrimeRecords = chosen.map((art) => ({
           date: todayStr,
-          crime: `Multa/Autuação: ${art.code} — ${art.name} <div className="text-emerald-400">${(art.fine ?? 0).toLocaleString()}</div>
+          crime: `Multa/Autuação: ${art.code} — ${art.name} ($${(art.fine ?? 0).toLocaleString()})`,
           officer: `@${currentUser.roblox_nick}`,
         }));
         const updatedRecords = [...newCrimeRecords, ...(matchedCitizen.criminal_records || [])];
@@ -1799,7 +1799,7 @@ if (!currentUser) {
                       </div>
                       <div className="text-right font-mono text-xs">
                         <div className="font-bold text-amber-400">{art.months} meses</div>
-                        <div className="text-emerald-400">${art.fine.toLocaleString()}</div>
+                        <div className="text-emerald-400">${(art.fine ?? 0).toLocaleString()}</div>
                       </div>
                     </label>
                   );
