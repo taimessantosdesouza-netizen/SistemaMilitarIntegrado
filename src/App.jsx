@@ -209,8 +209,6 @@ export default function App() {
   const [crimeInput, setCrimeInput] = useState({});
 
   const [vehicleSearch, setVehicleSearch] = useState('');
-  const [newVehicle, setNewVehicle] = useState({ plate: '', model: '', color: '', owner_name: '', owner_passport: '', status: 'Regular', notes: '' });
-
   const [newReport, setNewReport] = useState({
     report_type: 'OCORRENCIA',
     vtr_prefix: 'VTR-01',
@@ -584,27 +582,6 @@ export default function App() {
 
     if (isSupabaseConfigured && supabase) {
       await supabase.from('pm_citizens').update({ criminal_records: updatedRecords }).eq('id', citizen.id);
-    }
-  };
-
-  const handleAddVehicle = async (e) => {
-    e.preventDefault();
-    if (!newVehicle.plate || !newVehicle.model) return;
-    const payload = { ...newVehicle, plate: newVehicle.plate.toUpperCase() };
-    const localItem = { id: crypto.randomUUID(), ...payload };
-    setVehicles((prev) => [localItem, ...prev]);
-    setNewVehicle({ plate: '', model: '', color: '', owner_name: '', owner_passport: '', status: 'Regular', notes: '' });
-
-    if (isSupabaseConfigured && supabase) {
-      const { data } = await supabase.from('pm_vehicles').insert([payload]).select().single();
-      if (data) setVehicles((prev) => prev.map((v) => (v.id === localItem.id ? data : v)));
-    }
-  };
-
-  const handleUpdateVehicleStatus = async (vehicle, status) => {
-    setVehicles((prev) => prev.map((v) => (v.id === vehicle.id ? { ...v, status } : v)));
-    if (isSupabaseConfigured && supabase) {
-      await supabase.from('pm_vehicles').update({ status }).eq('id', vehicle.id);
     }
   };
 
@@ -1082,10 +1059,6 @@ if (!currentUser) {
     vehicleSearch={vehicleSearch}
     setVehicleSearch={setVehicleSearch}
     filteredVehicles={filteredVehicles}
-    handleUpdateVehicleStatus={handleUpdateVehicleStatus}
-    handleAddVehicle={handleAddVehicle}
-    newVehicle={newVehicle}
-    setNewVehicle={setNewVehicle}
   />
 )}
         
