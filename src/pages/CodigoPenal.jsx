@@ -11,6 +11,20 @@ export default function CodigoPenal({ selectedArticles, setSelectedArticles, pen
                 Calculadora Penal — Selecione os Artigos Aplicados
               </h2>
               <div className="space-y-2.5">
+                
+{PENAL_ARTICLES.length === 0 && (
+  <div className="bg-slate-950 border border-slate-800 rounded-xl p-8 text-center">
+    <Scale className="w-10 h-10 text-slate-500 mx-auto mb-3" />
+    <h3 className="text-white font-bold">
+      Código Penal em elaboração
+    </h3>
+    <p className="text-sm text-slate-400 mt-2">
+      Aguardando a publicação da tabela oficial
+      de crimes, penas e multas pelo Comando.
+    </p>
+  </div>
+)}
+
                 {PENAL_ARTICLES.map((art) => {
                   const checked = selectedArticles.includes(art.id);
                   return (
