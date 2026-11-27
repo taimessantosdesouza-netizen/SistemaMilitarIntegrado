@@ -1,7 +1,6 @@
-import React from 'react';
-import LoginForm from '../components/auth/LoginForm';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import IntroCutscene from '../components/auth/IntroCutscene';
+import LoginForm from '../components/auth/LoginForm';
 
 export default function Login({
   loginIdentifier,
@@ -12,16 +11,17 @@ export default function Login({
   onSubmit,
   onQuickFill,
   isSupabaseConfigured,
+}) {
   const [showIntro, setShowIntro] = useState(true);
 
-if (showIntro) {
-  return (
-    <IntroCutscene
-      onFinish={() => setShowIntro(false)}
-    />
-  );
-}
-}) {
+  if (showIntro) {
+    return (
+      <IntroCutscene
+        onFinish={() => setShowIntro(false)}
+      />
+    );
+  }
+  // O return original continua aqui.
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/25 via-slate-950 to-slate-950 pointer-events-none" />
