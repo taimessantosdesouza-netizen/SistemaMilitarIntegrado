@@ -1,14 +1,10 @@
 import React from 'react';
-import { Car, Plus } from 'lucide-react';
+import { Car, ShieldCheck } from 'lucide-react';
 
 export default function Renavam({
   vehicleSearch,
   setVehicleSearch,
-  filteredVehicles,
-  handleUpdateVehicleStatus,
-  handleAddVehicle,
-  newVehicle,
-  setNewVehicle
+  filteredVehicles
 }) {
   return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -28,6 +24,11 @@ export default function Renavam({
               </div>
 
               <div className="space-y-3">
+                {filteredVehicles.length === 0 && (
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-8 text-center text-sm text-slate-400">
+                    Nenhum veículo encontrado. Os registros são disponibilizados pelo DOT.
+                  </div>
+                )}
                 {filteredVehicles.map((veh) => (
                   <div key={veh.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
                     <div className="space-y-1">
@@ -44,22 +45,19 @@ export default function Renavam({
                       {veh.notes && <div className="text-xs text-slate-500">{veh.notes}</div>}
                     </div>
 
-                    <select
-                      value={veh.status}
-                      onChange={(e) => handleUpdateVehicleStatus(veh, e.target.value)}
-                      style={{ colorScheme: 'dark' }}
+                    <span
                       className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${
                         veh.status === 'Roubado/Furtado'
                           ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
                           : veh.status === 'Apreendido'
                           ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                          : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                          : veh.status === 'Regular'
+                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                            : 'bg-slate-800 text-slate-300 border-slate-700'
                       }`}
-                    >
-                      <option value="Regular">Regular</option>
-                      <option value="Roubado/Furtado">Roubado/Furtado</option>
-                      <option value="Apreendido">Apreendido</option>
-                    </select>
+                     >
+                      {veh.status || "Não informado"}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -67,74 +65,11 @@ export default function Renavam({
 
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-fit">
               <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
-                <Plus className="w-5 h-5 text-emerald-400" />
-                Registrar Veículo no RENAVAM
+                <ShieldCheck className="w-5 h-5 text-blue-400" />
+                Gerenciamento exclusivo do DOT
               </h3>
-              <form onSubmit={handleAddVehicle} className="space-y-3 text-xs">
-                <input
-                  type="text"
-                  required
-                  placeholder="Placa (Ex: PTN-8K20)"
-                  value={newVehicle.plate}
-                  onChange={(e) => setNewVehicle({ ...newVehicle, plate: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono"
-                />
-                <input
-                  type="text"
-                  required
-                  placeholder="Modelo (Ex: Lancer Evolution)"
-                  value={newVehicle.model}
-                  onChange={(e) => setNewVehicle({ ...newVehicle, model: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
-                />
-                <input
-                  type="text"
-                  placeholder="Cor"
-                  value={newVehicle.color}
-                  onChange={(e) => setNewVehicle({ ...newVehicle, color: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
-                />
-                <input
-                  type="text"
-                  required
-                  placeholder="Nome do Proprietário"
-                  value={newVehicle.owner_name}
-                  onChange={(e) => setNewVehicle({ ...newVehicle, owner_name: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
-                />
-                <input
-                  type="text"
-                  placeholder="Passaporte (Ex: PTN-1002)"
-                  value={newVehicle.owner_passport}
-                  onChange={(e) => setNewVehicle({ ...newVehicle, owner_passport: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono"
-                />
-                <select
-                  value={newVehicle.status}
-                  onChange={(e) => setNewVehicle({ ...newVehicle, status: e.target.value })}
-                  style={{ colorScheme: 'dark' }}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
-                >
-                  <option value="Regular">Regular</option>
-                  <option value="Roubado/Furtado">Roubado/Furtado</option>
-                  <option value="Apreendido">Apreendido</option>
-                </select>
-                <input
-                  type="text"
-                  placeholder="Observações"
-                  value={newVehicle.notes}
-                  onChange={(e) => setNewVehicle({ ...newVehicle, notes: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition"
-                >
-                  Cadastrar Veículo
-                </button>
-              </form>
+              <p className="text-sm text-slate-400">O cadastro e a atualização dos veículos são de responsabilidade do Departamento de Trânsito. A Polícia Militar possui acesso somente para consulta.</p>
             </div>
           </div>
   );
 }
-
