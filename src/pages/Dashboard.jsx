@@ -31,8 +31,25 @@ export default function Dashboard({
 }) {
   return (
           <div className="space-y-6">
+            <section className="relative overflow-hidden rounded-2xl border border-blue-500/30 bg-slate-950/80 p-6 md:p-8 shadow-xl shadow-blue-950/30">
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-blue-950/70 to-transparent" />
+              <div className="relative flex flex-wrap items-center justify-between gap-5">
+                <div>
+                  <p className="text-[10px] font-mono tracking-[0.25em] text-blue-400 mb-2">SIGP / CENTRAL DE OPERAÇÕES</p>
+                  <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">Ponto &amp; Patrulha</h1>
+                  <p className="text-sm text-slate-400 mt-2">Controle operacional de turnos e efetivo policial.</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="rounded-xl border border-blue-500/30 bg-slate-950/70 px-5 py-3">
+                    <p className="text-[10px] font-mono text-blue-300 uppercase">Efetivo em serviço</p>
+                    <p className="text-3xl font-mono font-bold text-emerald-400">{activeShiftsAll.length}</p>
+                  </div>
+                  <img src="/gvcr.png" alt="GVCR" className="w-16 h-16 rounded-xl object-cover border border-blue-400/40 shadow-lg shadow-blue-900/50" />
+                </div>
+              </div>
+            </section>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+              <div className="lg:col-span-2 bg-slate-900/80 backdrop-blur-sm border border-blue-500/25 shadow-xl shadow-blue-950/20 rounded-2xl p-6 space-y-5">
                 <div>
                   <h2 className="text-lg font-bold text-white flex items-center gap-2">
                     <Radio className="w-5 h-5 text-blue-400" />
@@ -44,7 +61,7 @@ export default function Dashboard({
                 </div>
 
                 {!activeShift ? (
-                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-4">
+                  <div className="bg-slate-950/80 border border-blue-500/20 rounded-xl p-5 space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs text-slate-400 mb-1">Prefixo / Tipo de Viatura</label>
@@ -52,7 +69,7 @@ export default function Dashboard({
                           value={vtrPrefix}
                           onChange={(e) => setVtrPrefix(e.target.value)}
                           style={{ colorScheme: 'dark' }}
-                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white"
+                          className="w-full bg-slate-950/80 border border-blue-500/30 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2.5 text-sm text-white"
                         >
                           <option value="Caracterizada">Viatura Caracterizada</option>
                           <option value="VTR-01 Patrulha">VTR-01 Patrulha Ostensiva</option>
@@ -68,14 +85,14 @@ export default function Dashboard({
                           value={patrolArea}
                           onChange={(e) => setPatrolArea(e.target.value)}
                           placeholder="Ex: GV e Horton, Túnel de Brookmere..."
-                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white"
+                          className="w-full bg-slate-950/80 border border-blue-500/30 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded-xl px-3 py-2.5 text-sm text-white"
                         />
                       </div>
                     </div>
 
                     <button
                       onClick={handleStartShift}
-                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950"
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950 hover:shadow-emerald-500/20"
                     >
                       <CheckCircle2 className="w-5 h-5" />
                       INICIAR SERVIÇO AGORA
@@ -86,7 +103,7 @@ export default function Dashboard({
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
                         <span className="text-xs font-bold uppercase text-emerald-400">Turno em Andamento</span>
-                        <div className="text-3xl font-mono font-extrabold text-white mt-1">
+                        <div className="text-4xl md:text-5xl font-mono font-extrabold text-emerald-300 tabular-nums mt-1">
                           {formatDuration(elapsedSeconds)}
                         </div>
                         <p className="text-xs text-slate-300 mt-1">
@@ -104,7 +121,7 @@ export default function Dashboard({
                         value={shiftSummary}
                         onChange={(e) => setShiftSummary(e.target.value)}
                         placeholder="Ex: Patrulhamento em GV e Horton, abordagem a suspeito, apoio em ocorrência..."
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white"
+                        className="w-full bg-slate-950/80 border border-blue-500/20 rounded-xl p-3 text-xs text-white"
                       />
                     </div>
 
@@ -153,7 +170,7 @@ export default function Dashboard({
                       .map((log) => (
                         <div
                           key={log.id}
-                          className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2 text-xs"
+                          className="bg-slate-950/80 border border-blue-500/20 rounded-xl p-3 space-y-2 text-xs"
                         >
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <div>
@@ -188,7 +205,7 @@ export default function Dashboard({
                 </div>
               </div>
 
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <div className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/25 shadow-xl shadow-blue-950/20 rounded-2xl p-5">
                 <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
                   <Activity className="w-5 h-5 text-emerald-400" />
                   Efetivo em Serviço Agora ({activeShiftsAll.length})
@@ -220,7 +237,7 @@ export default function Dashboard({
             </div>
 
             {isHighCommand && (
-              <div className="bg-slate-900 border border-amber-500/25 rounded-2xl p-5">
+              <div className="bg-slate-900/80 backdrop-blur-sm border border-amber-500/25 shadow-xl shadow-blue-950/20 rounded-2xl p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <div>
                     <h2 className="text-base font-bold text-white flex items-center gap-2">
@@ -237,7 +254,7 @@ export default function Dashboard({
                       value={dutyFilterOfficer}
                       onChange={(e) => setDutyFilterOfficer(e.target.value)}
                       style={{ colorScheme: 'dark' }}
-                      className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+                      className="bg-slate-950/80 border border-blue-500/20 rounded-lg px-3 py-1.5 text-xs text-slate-200"
                     >
                       <option value="TODOS">Todos os Policiais</option>
                       {officers.map((o) => (
@@ -251,7 +268,7 @@ export default function Dashboard({
                       value={dutyFilterStatus}
                       onChange={(e) => setDutyFilterStatus(e.target.value)}
                       style={{ colorScheme: 'dark' }}
-                      className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+                      className="bg-slate-950/80 border border-blue-500/20 rounded-lg px-3 py-1.5 text-xs text-slate-200"
                     >
                       <option value="TODOS">Todos os Status</option>
                       <option value="EM_SERVICO">Em Serviço</option>
@@ -281,7 +298,7 @@ export default function Dashboard({
                             ? Math.floor((nowTick - new Date(log.started_at).getTime()) / 1000)
                             : log.duration_seconds;
                         return (
-                          <tr key={log.id} className="hover:bg-slate-800/40">
+                          <tr key={log.id} className="hover:bg-blue-950/40 transition-colors">
                             <td className="py-3 px-3">
                               <div className="font-bold text-white">{log.officer_rp_name}</div>
                               <div className="text-[11px] font-mono text-slate-400">
