@@ -1017,6 +1017,7 @@ if (!currentUser) {
 />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+  <div key={activeTab} className="sigp-module space-y-6">
         
 {activeTab === 'comando' && isHighCommand && (
   <AltoComando
@@ -1150,7 +1151,8 @@ if (!currentUser) {
     handleDeleteAnnouncement={handleDeleteAnnouncement}
   />
 )}
-      </main>
+        </div>
+</main>
 
       {isHighRank && reportToasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-50 w-full max-w-sm space-y-2.5 pointer-events-none px-4 sm:px-0">
