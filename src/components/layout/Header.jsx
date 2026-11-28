@@ -1,7 +1,5 @@
-
 import React from 'react';
 import {
-  Shield,
   LogOut,
   Radio,
   Users,
@@ -38,23 +36,25 @@ export default function Header({
   pendingReportsCount
 }) {
   return (
-    <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-30">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+    <header className="bg-slate-950/95 backdrop-blur-xl border-b border-blue-500/30 sticky top-0 z-30 shadow-[0_8px_35px_#020617aa]">
+      <div className="absolute inset-0 pointer-events-none opacity-10" style={{ backgroundImage: 'linear-gradient(#2563eb 1px, transparent 1px), linear-gradient(90deg, #2563eb 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+      <div className="relative max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shrink-0">
-            <Shield className="w-6 h-6 text-blue-400" />
+          <div className="w-14 h-14 rounded-xl bg-blue-600/20 border border-blue-400/60 flex items-center justify-center shrink-0 overflow-hidden shadow-[0_0_22px_#2563eb66]">
+            <img src="/gvcr.png" alt="GVCR" className="w-full h-full object-cover" />
           </div>
 
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-white tracking-tight">
+              <span className="font-extrabold text-white tracking-wide text-base">
                 SIGP CAPITAL VILLE
               </span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30">
-                RP MILITAR
+                GVCR • RP MILITAR
               </span>
             </div>
 
+            <p className="text-[10px] font-mono tracking-[0.2em] text-blue-400 mb-1">CENTRAL DE OPERAÇÕES</p>
             <p className="text-xs text-slate-400">
               Oficial: <strong className="text-slate-200">{currentUser.rp_name}</strong> (@{currentUser.roblox_nick}) •{' '}
               <span className="text-amber-400 font-semibold">
@@ -72,7 +72,7 @@ export default function Header({
               value={globalSearch}
               onChange={(e) => setGlobalSearch(e.target.value)}
               placeholder="Buscar Passaporte, Nome ou Placa..."
-              className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-slate-950/80 border border-blue-500/25 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
             />
           </div>
         </div>
@@ -153,11 +153,11 @@ export default function Header({
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 pb-2.5 pt-1 flex flex-wrap items-center gap-1.5">
+      <div className="relative max-w-7xl mx-auto px-4 pb-3 pt-2 flex flex-wrap items-center gap-2 border-t border-blue-500/15">
         {isHighCommand && (
           <button
             onClick={() => setActiveTab('comando')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+            className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
               activeTab === 'comando'
                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                 : 'text-amber-400/90 hover:bg-slate-800'
@@ -185,10 +185,10 @@ export default function Header({
           <button
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+            className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
               activeTab === id
-                ? 'bg-blue-600 text-white'
-                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                ? 'bg-blue-600/25 text-blue-200 ring-1 ring-blue-400/50 shadow-[0_0_15px_#2563eb33]'
+                : 'text-slate-300 hover:bg-blue-500/10 hover:text-blue-200'
             }`}
           >
             <Icon className="w-3.5 h-3.5" />
