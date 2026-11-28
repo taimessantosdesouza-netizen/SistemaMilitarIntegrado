@@ -24,8 +24,17 @@ export default function Login({
   // O return original continua aqui.
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/25 via-slate-950 to-slate-950 pointer-events-none" />
+     <div className="absolute inset-0 pointer-events-none">
+  <img
+    src="/gvcr.png"
+    alt=""
+    className="w-full h-full object-cover opacity-40"
+  />
 
+  <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-slate-950/80" />
+
+  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/50" />
+</div>
       <LoginForm
         loginIdentifier={loginIdentifier}
         setLoginIdentifier={setLoginIdentifier}
