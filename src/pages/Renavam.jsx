@@ -9,7 +9,7 @@ export default function Renavam({
   return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-3 rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-950/80 to-slate-950/90 p-5 flex items-center gap-4 shadow-xl">
-              <img src="/gvcr.png" alt="GVCR" className="w-16 h-16 rounded-xl object-cover border border-blue-400/40" />
+              <div className="w-16 h-16 shrink-0 rounded-xl bg-blue-500/10 border border-blue-400/40 flex items-center justify-center shadow-lg shadow-blue-950/40"><Car className="w-8 h-8 text-blue-400" aria-hidden="true" /></div>
               <div className="flex-1">
                 <p className="text-[10px] tracking-widest text-blue-300 font-mono">SIGP / CENTRAL DE CONSULTA VEICULAR</p>
                 <h1 className="text-2xl font-bold text-white">RENAVAM</h1>

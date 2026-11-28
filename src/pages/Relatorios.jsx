@@ -33,7 +33,7 @@ export default function Relatorios({
     <div className="space-y-6">
       <section className="relative overflow-hidden rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-950/80 via-slate-900/90 to-slate-950/90 p-5 shadow-[0_0_30px_rgba(37,99,235,0.12)]">
         <div className="relative flex items-center gap-4">
-          <img src="/gvcr.png" alt="GVCR" className="w-16 h-16 rounded-xl object-cover border border-blue-400/40" />
+          <div className="w-16 h-16 shrink-0 rounded-xl bg-blue-500/10 border border-blue-400/40 flex items-center justify-center shadow-lg shadow-blue-950/40"><FileText className="w-8 h-8 text-blue-400" aria-hidden="true" /></div>
           <div>
             <p className="text-[10px] font-mono tracking-widest text-blue-400">SIGP / ARQUIVO OPERACIONAL</p>
             <h1 className="text-2xl font-extrabold text-white">Relatórios operacionais</h1>

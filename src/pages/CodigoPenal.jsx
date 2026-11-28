@@ -7,7 +7,7 @@ export default function CodigoPenal({ selectedArticles, setSelectedArticles, pen
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-3 relative overflow-hidden rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-950/80 to-slate-950 p-5 shadow-lg shadow-blue-950/40">
         <div className="flex items-center gap-4">
-          <img src="/gvcr.png" alt="GVCR" className="w-16 h-16 rounded-xl object-cover border border-blue-400/40" />
+          <div className="w-16 h-16 shrink-0 rounded-xl bg-blue-500/10 border border-blue-400/40 flex items-center justify-center shadow-lg shadow-blue-950/40"><Scale className="w-8 h-8 text-blue-400" aria-hidden="true" /></div>
           <div>
             <p className="text-[10px] tracking-widest text-blue-400 font-mono">SIGP / CENTRAL DE LEGISLAÇÃO</p>
             <h1 className="text-2xl font-extrabold text-white">Código Penal</h1>

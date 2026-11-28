@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Plus } from 'lucide-react';
+import { Users, Plus, Fingerprint } from 'lucide-react';
 
 export default function Infopen({
   citizenSearch,
@@ -17,7 +17,7 @@ export default function Infopen({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <section className="lg:col-span-3 relative overflow-hidden rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-950/70 to-slate-950/90 p-6 shadow-lg shadow-blue-950/30">
               <div className="flex flex-wrap items-center gap-5">
-                <img src="/gvcr.png" alt="GVCR" className="w-20 h-20 rounded-full object-cover border border-blue-400/50 shadow-[0_0_25px_#1d4ed8]" />
+                <div className="w-16 h-16 shrink-0 rounded-xl bg-blue-500/10 border border-blue-400/40 flex items-center justify-center shadow-lg shadow-blue-950/40"><Fingerprint className="w-8 h-8 text-blue-400" aria-hidden="true" /></div>
                 <div className="flex-1 min-w-[180px]">
                   <p className="text-[10px] font-mono tracking-widest text-blue-400">SIGP / CENTRAL DE INTELIGÊNCIA</p>
                   <h1 className="text-2xl md:text-3xl font-black text-white mt-2">INFOPEN</h1>

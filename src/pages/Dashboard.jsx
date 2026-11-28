@@ -44,7 +44,7 @@ export default function Dashboard({
                     <p className="text-[10px] font-mono text-blue-300 uppercase">Efetivo em serviço</p>
                     <p className="text-3xl font-mono font-bold text-emerald-400">{activeShiftsAll.length}</p>
                   </div>
-                  <img src="/gvcr.png" alt="GVCR" className="w-16 h-16 rounded-xl object-cover border border-blue-400/40 shadow-lg shadow-blue-900/50" />
+                  <div className="w-16 h-16 shrink-0 rounded-xl bg-blue-500/10 border border-blue-400/40 flex items-center justify-center shadow-lg shadow-blue-950/40"><Radio className="w-8 h-8 text-blue-400" aria-hidden="true" /></div>
                 </div>
               </div>
             </section>
