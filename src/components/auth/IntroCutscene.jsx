@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Shield, ChevronRight } from 'lucide-react';
 
@@ -63,6 +62,15 @@ export default function IntroCutscene({ onFinish }) {
 
       <div className="absolute w-96 h-96 bg-blue-600/10 blur-3xl rounded-full" />
 
+      <div className="absolute inset-0 pointer-events-none">
+  <img
+    src="/gvcr.png"
+    alt=""
+    className="w-full h-full object-cover opacity-20"
+  />
+  <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-950/30 to-slate-950" />
+</div>
+
       <div className="absolute top-6 left-6 text-xs font-mono tracking-widest text-blue-400">
         SIGP // CAPITAL VILLE
       </div>
@@ -79,8 +87,15 @@ export default function IntroCutscene({ onFinish }) {
 
           <div className="absolute inset-0 rounded-full border-t-2 border-blue-400 radar-spin" />
 
-          <Shield className="w-20 h-20 text-blue-400 drop-shadow-[0_0_25px_#2563eb]" />
-
+          {progress < 40 ? (
+  <img
+    src="/gvcr.png"
+    alt="GVCR"
+    className="w-32 h-32 object-cover rounded-2xl intro-reveal shadow-[0_0_40px_#2563eb]"
+  />
+) : (
+  <Shield className="w-20 h-20 text-blue-400 intro-reveal drop-shadow-[0_0_25px_#2563eb]" />
+)}
         </div>
 
         <p className="text-blue-400 text-xs font-mono tracking-[0.4em] mb-4">
