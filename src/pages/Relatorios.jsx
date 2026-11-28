@@ -30,8 +30,19 @@ export default function Relatorios({
   handleReviewReport
 }) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-fit">
+    <div className="space-y-6">
+      <section className="relative overflow-hidden rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-950/80 via-slate-900/90 to-slate-950/90 p-5 shadow-[0_0_30px_rgba(37,99,235,0.12)]">
+        <div className="relative flex items-center gap-4">
+          <img src="/gvcr.png" alt="GVCR" className="w-16 h-16 rounded-xl object-cover border border-blue-400/40" />
+          <div>
+            <p className="text-[10px] font-mono tracking-widest text-blue-400">SIGP / ARQUIVO OPERACIONAL</p>
+            <h1 className="text-2xl font-extrabold text-white">Relatórios operacionais</h1>
+            <p className="text-xs text-slate-400 mt-1">Registro, consulta e acompanhamento de ocorrências</p>
+          </div>
+        </div>
+      </section>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/20 shadow-lg shadow-blue-950/20 rounded-2xl p-5 h-fit">
               <h2 className="text-base font-bold text-white flex items-center gap-2 mb-4">
                 <FileText className="w-5 h-5 text-blue-400" />
                 Lavrar Relatório Pós-Ocorrência
@@ -43,7 +54,7 @@ export default function Relatorios({
                     value={newReport.report_type}
                     onChange={(e) => setNewReport({ ...newReport, report_type: e.target.value })}
                     style={{ colorScheme: 'dark' }}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
+                    className="w-full bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg px-2 py-2 text-white"
                   >
                     <option value="OCORRENCIA">Ocorrência policial</option>
                     <option value="ABORDAGEM">Abordagem</option>
@@ -60,7 +71,7 @@ export default function Relatorios({
                       value={newReport.incident_code}
                       onChange={(e) => setNewReport({ ...newReport, incident_code: e.target.value })}
                       style={{ colorScheme: 'dark' }}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
+                      className="w-full bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg px-2 py-2 text-white"
                     >
                       <option value="Código 1">Código 1 (Patrulha)</option>
                       <option value="Código 2">Código 2 (Urgência)</option>
@@ -74,7 +85,7 @@ export default function Relatorios({
                       type="text"
                       value={newReport.vtr_prefix}
                       onChange={(e) => setNewReport({ ...newReport, vtr_prefix: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                      className="w-full bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg px-3 py-2 text-white"
                     />
                   </div>
                 </div>
@@ -87,7 +98,7 @@ export default function Relatorios({
                     placeholder="Ex: Túnel de Brookmere, GV e Horton..."
                     value={newReport.location}
                     onChange={(e) => setNewReport({ ...newReport, location: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                    className="w-full bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg px-3 py-2 text-white"
                   />
                 </div>
 
@@ -98,7 +109,7 @@ export default function Relatorios({
                     placeholder="Ex: @Krustelles_22 @wyzontheradar"
                     value={newReport.involved_officers}
                     onChange={(e) => setNewReport({ ...newReport, involved_officers: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                    className="w-full bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg px-3 py-2 text-white"
                   />
                 </div>
 
@@ -109,7 +120,7 @@ export default function Relatorios({
                     placeholder="Ex: nick (PTN-1001)"
                     value={newReport.involved_citizens}
                     onChange={(e) => setNewReport({ ...newReport, involved_citizens: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                    className="w-full bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg px-3 py-2 text-white"
                   />
                 </div>
 
@@ -123,7 +134,7 @@ export default function Relatorios({
                     placeholder="Registre os fatos em ordem cronológica: situação inicial, ações dos envolvidos, intervenção policial e desfecho..."
                     value={newReport.description}
                     onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white"
+                    className="w-full bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg p-2.5 text-white"
                   />
                   <div className="text-right text-[10px] text-slate-500">{newReport.description.length}/3000 caracteres (mínimo 20)</div>
                 </div>
@@ -192,7 +203,7 @@ export default function Relatorios({
                       type="text"
                       value={newReport.actions_taken}
                       onChange={(e) => setNewReport({ ...newReport, actions_taken: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                      className="w-full bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg px-3 py-2 text-white"
                     />
                   </div>
                   <div>
@@ -201,7 +212,7 @@ export default function Relatorios({
                       value={newReport.outcome}
                       onChange={(e) => setNewReport({ ...newReport, outcome: e.target.value })}
                       style={{ colorScheme: 'dark' }}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
+                      className="w-full bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg px-2 py-2 text-white"
                     >
                       <option value="Preso">Preso</option>
                       <option value="Abatido em Confronto">Abatido em Confronto</option>
@@ -228,13 +239,13 @@ export default function Relatorios({
                   { label: 'Aprovados', value: reports.filter((r) => (isHighRank || (r.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase()) && r.review_status === 'APROVADO'), tone: 'text-emerald-300' },
                   { label: 'Reprovados', value: reports.filter((r) => (isHighRank || (r.author_nick || '').toLowerCase() === (currentUser?.roblox_nick || '').toLowerCase()) && r.review_status === 'REPROVADO'), tone: 'text-rose-300' }
                 ].map((metric) => (
-                  <div key={metric.label} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
+                  <div key={metric.label} className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/20 shadow-lg shadow-blue-950/20 rounded-xl p-3">
                     <div className="text-[10px] uppercase tracking-wider text-slate-500">{metric.label}</div>
                     <div className={`text-xl font-extrabold ${metric.tone}`}>{metric.value.length}</div>
                   </div>
                 ))}
               </div>
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/20 shadow-lg shadow-blue-950/20 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs text-slate-300">
                   {isHighRank ? (
                     <>
@@ -252,13 +263,13 @@ export default function Relatorios({
                   value={reportSearch}
                   onChange={(e) => setReportSearch(e.target.value)}
                   placeholder="Buscar por local, policial, envolvido ou descrição..."
-                  className="min-w-[220px] flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                  className="min-w-[220px] flex-1 bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg px-3 py-1.5 text-xs text-white"
                 />
                 <select
                   value={reportFilterType}
                   onChange={(e) => setReportFilterType(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+                  className="bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg px-3 py-1.5 text-xs text-slate-200"
                 >
                   <option value="TODOS">Todas as naturezas</option>
                   <option value="OCORRENCIA">Ocorrência</option>
@@ -272,7 +283,7 @@ export default function Relatorios({
                   value={reportFilterStatus}
                   onChange={(e) => setReportFilterStatus(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+                  className="bg-slate-950/90 border border-blue-500/20 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-500/30 transition-colors rounded-lg px-3 py-1.5 text-xs text-slate-200"
                 >
                   <option value="TODOS">Todos os Status</option>
                   <option value="PENDENTE">Pendentes</option>
@@ -302,7 +313,7 @@ export default function Relatorios({
                   const canDelete = isHighRank || isAuthor;
 
                   return (
-                    <div key={rep.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                    <div key={rep.id} className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/20 shadow-lg shadow-blue-950/20 rounded-2xl p-5 space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="px-2.5 py-0.5 rounded bg-blue-500/20 text-blue-300 text-xs font-bold">
@@ -414,6 +425,7 @@ export default function Relatorios({
                 })}
             </div>
           </div>
+    </div>
   );
 }
 
