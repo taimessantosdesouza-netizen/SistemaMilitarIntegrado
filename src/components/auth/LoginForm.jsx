@@ -29,7 +29,11 @@ export default function LoginForm({ loginIdentifier, setLoginIdentifier, loginPi
             <div className="absolute inset-4 rounded-full border border-blue-500/30" />
             <div className="absolute inset-8 rounded-full border border-blue-500/40" />
             <div className="absolute inset-0 rounded-full border-t-2 border-blue-400 sigp-radar" />
-            <Shield className="w-16 h-16 text-blue-400 drop-shadow-[0_0_25px_#2563eb]" />
+           <img
+  src="/gvcr.png"
+  alt="GVCR Capital Ville"
+  className="w-24 h-24 object-cover rounded-full border-2 border-blue-400/50 shadow-[0_0_30px_#2563eb]"
+/>
           </div>
           <div className="flex items-center gap-2 text-xs font-mono tracking-[0.25em] text-blue-400 mb-4"><Radio className="w-4 h-4 motion-safe:animate-pulse" /> REDE OPERACIONAL</div>
           <h1 className="text-3xl sm:text-4xl font-black tracking-wider text-white">POLÍCIA MILITAR</h1>
