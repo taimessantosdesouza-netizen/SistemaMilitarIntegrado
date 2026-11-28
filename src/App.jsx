@@ -959,7 +959,41 @@ if (!currentUser) {
     : 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+   <div
+  className="min-h-screen bg-slate-950 text-slate-100 flex flex-col relative"
+  style={{
+    backgroundImage: `
+      radial-gradient(ellipse at top left, rgba(37,99,235,0.15), transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(30,64,175,0.12), transparent 50%),
+      linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px)
+    `,
+    backgroundSize: '100% 100%, 100% 100%, 45px 45px, 45px 45px',
+    backgroundAttachment: 'fixed'
+  }}
+>
+  <style>{`
+    @keyframes sigpEntrance {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .sigp-module {
+      animation: sigpEntrance 0.4s ease-out both;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sigp-module {
+        animation: none;
+      }
+    }
+  `}</style>
   
 <Header
   currentUser={currentUser}
