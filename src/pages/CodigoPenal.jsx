@@ -5,7 +5,17 @@ import { PENAL_ARTICLES } from '../constants/penalArticles';
 export default function CodigoPenal({ selectedArticles, setSelectedArticles, penaltySummary, activeShift, fineTarget, setFineTarget, handleRegisterShiftFine, fineFeedback, setFineFeedback }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
+      <div className="lg:col-span-3 relative overflow-hidden rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-950/80 to-slate-950 p-5 shadow-lg shadow-blue-950/40">
+        <div className="flex items-center gap-4">
+          <img src="/gvcr.png" alt="GVCR" className="w-16 h-16 rounded-xl object-cover border border-blue-400/40" />
+          <div>
+            <p className="text-[10px] tracking-widest text-blue-400 font-mono">SIGP / CENTRAL DE LEGISLAÇÃO</p>
+            <h1 className="text-2xl font-extrabold text-white">Código Penal</h1>
+            <p className="text-xs text-slate-400">Consulta de artigos e cálculo de penalidades</p>
+          </div>
+        </div>
+      </div>
+            <div className="lg:col-span-2 bg-slate-900/80 backdrop-blur-sm border border-blue-500/25 shadow-lg shadow-blue-950/30 rounded-2xl p-5">
               <h2 className="text-base font-bold text-white flex items-center gap-2 mb-4">
                 <Scale className="w-5 h-5 text-blue-400" />
                 Calculadora Penal — Selecione os Artigos Aplicados
@@ -13,8 +23,8 @@ export default function CodigoPenal({ selectedArticles, setSelectedArticles, pen
               <div className="space-y-2.5">
                 
 {PENAL_ARTICLES.length === 0 && (
-  <div className="bg-slate-950 border border-slate-800 rounded-xl p-8 text-center">
-    <Scale className="w-10 h-10 text-slate-500 mx-auto mb-3" />
+  <div className="bg-slate-950/80 border border-blue-500/20 rounded-xl p-8 text-center">
+    <Scale className="w-10 h-10 text-blue-400 mx-auto mb-3" />
     <h3 className="text-white font-bold">
       Código Penal em elaboração
     </h3>
@@ -33,7 +43,7 @@ export default function CodigoPenal({ selectedArticles, setSelectedArticles, pen
                       className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition ${
                         checked
                           ? 'bg-blue-600/15 border-blue-500 text-white'
-                          : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                          : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-blue-400/50'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -65,9 +75,9 @@ export default function CodigoPenal({ selectedArticles, setSelectedArticles, pen
               </div>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-fit space-y-4">
+            <div className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/25 shadow-lg shadow-blue-950/30 rounded-2xl p-5 h-fit space-y-4">
               <h3 className="text-base font-bold text-white">Resumo da Pena & Registro no Ponto</h3>
-              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+              <div className="bg-slate-950/80 border border-blue-500/20 rounded-xl p-4 space-y-3">
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">Artigos selecionados:</span>
                   <span className="font-mono font-extrabold text-white text-base">{penaltySummary.count}</span>
@@ -92,7 +102,7 @@ export default function CodigoPenal({ selectedArticles, setSelectedArticles, pen
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800 space-y-2.5 text-xs">
+              <div className="pt-2 border-t border-blue-500/20 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between">
                   <label className="text-slate-300 font-semibold">
                     Passaporte, Nome ou Placa do Autuado
@@ -110,7 +120,7 @@ export default function CodigoPenal({ selectedArticles, setSelectedArticles, pen
                   placeholder="Ex: PTN-1001, Nickolas Silva ou PTN-9X88"
                   value={fineTarget}
                   onChange={(e) => setFineTarget(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  className="w-full bg-slate-950/80 border border-blue-500/20 rounded-lg px-3 py-2 text-white"
                 />
                 <button
                   type="button"
