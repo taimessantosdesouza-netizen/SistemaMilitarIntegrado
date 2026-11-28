@@ -27,9 +27,10 @@ export default function AltoComando({
 }) {
   return (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-amber-500/15 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+            <div className="bg-gradient-to-br from-blue-950/80 via-slate-900/90 to-slate-950/80 border border-blue-500/30 rounded-2xl p-7 shadow-[0_0_35px_rgba(37,99,235,0.12)] backdrop-blur-xl flex flex-col gap-6">
               <div>
-                <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                <p className="text-[10px] font-mono tracking-[0.3em] text-blue-400 mb-3">SIGP / CENTRAL DE OPERAÇÕES / COMANDO</p>
+                <div className="flex items-center gap-2 text-amber-400 font-bold text-xl md:text-2xl">
                   <ShieldAlert className="w-5 h-5" />
                   PAINEL DO ALTO COMANDO — {currentUser.rank_name.toUpperCase()}
                 </div>
@@ -37,24 +38,24 @@ export default function AltoComando({
                   Pasta de relatórios para aprovação/reprovação e recrutamento. A auditoria de turnos fica em <strong>Ponto & Patrulha</strong> e o prontuário do efetivo em <strong>Hierarquia & Mural</strong>.
                 </p>
               </div>
-              <div className="flex gap-3">
-                <div className="bg-slate-950/80 border border-slate-800 px-4 py-2 rounded-xl text-center">
-                  <div className="text-lg font-extrabold text-emerald-400">{activeShiftsAll.length}</div>
-                  <div className="text-[10px] uppercase text-slate-400">Em Serviço</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-slate-950/70 border border-blue-500/25 px-5 py-5 rounded-xl text-center hover:border-blue-400/60 transition shadow-lg">
+                  <div className="text-4xl font-extrabold tabular-nums text-emerald-400">{activeShiftsAll.length}</div>
+                  <div className="text-xs uppercase tracking-widest text-slate-400 mt-2">Em Serviço</div>
                 </div>
-                <div className="bg-slate-950/80 border border-slate-800 px-4 py-2 rounded-xl text-center">
-                  <div className="text-lg font-extrabold text-blue-400">{officers.length}</div>
-                  <div className="text-[10px] uppercase text-slate-400">Efetivo Total</div>
+                <div className="bg-slate-950/70 border border-blue-500/25 px-5 py-5 rounded-xl text-center hover:border-blue-400/60 transition shadow-lg">
+                  <div className="text-4xl font-extrabold tabular-nums text-blue-400">{officers.length}</div>
+                  <div className="text-xs uppercase tracking-widest text-slate-400 mt-2">Efetivo Total</div>
                 </div>
-                <div className="bg-slate-950/80 border border-slate-800 px-4 py-2 rounded-xl text-center">
-                  <div className="text-lg font-extrabold text-amber-400">{pendingReportsCount}</div>
-                  <div className="text-[10px] uppercase text-slate-400">Rel. Pendentes</div>
+                <div className="bg-slate-950/70 border border-blue-500/25 px-5 py-5 rounded-xl text-center hover:border-blue-400/60 transition shadow-lg">
+                  <div className="text-4xl font-extrabold tabular-nums text-amber-400">{pendingReportsCount}</div>
+                  <div className="text-xs uppercase tracking-widest text-slate-400 mt-2">Rel. Pendentes</div>
                 </div>
               </div>
             </div>
 
             {isHighRank && (
-              <div className="bg-slate-900 border border-amber-500/30 rounded-2xl overflow-hidden">
+              <div className="bg-slate-900/75 backdrop-blur-xl border border-blue-500/30 rounded-2xl overflow-hidden shadow-lg">
                 <button
                   type="button"
                   onClick={() => setCmdReportsFolderOpen((prev) => !prev)}
@@ -116,7 +117,7 @@ export default function AltoComando({
                         value={cmdReportFilterStatus}
                         onChange={(e) => setCmdReportFilterStatus(e.target.value)}
                         style={{ colorScheme: 'dark' }}
-                        className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+                        className="bg-slate-950/80 border border-blue-900/70 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded-lg px-3 py-1.5 text-xs text-slate-200"
                       >
                         <option value="PENDENTE">Somente Pendentes</option>
                         <option value="TODOS">Todos os Relatórios</option>
@@ -253,19 +254,19 @@ export default function AltoComando({
               </div>
             )}
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <div className="bg-slate-900/75 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-6 shadow-lg">
               <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
                 <Plus className="w-5 h-5 text-emerald-400" />
                 Recrutar / Cadastrar Policial
               </h3>
-              <form onSubmit={handleAddOfficer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 text-xs">
+              <form onSubmit={handleAddOfficer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                 <input
                   type="text"
                   required
                   placeholder="Matrícula (Ex: PM-007)"
                   value={newOfficer.badge_number}
                   onChange={(e) => setNewOfficer({ ...newOfficer, badge_number: e.target.value })}
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono"
+                  className="bg-slate-950/80 border border-blue-900/70 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded-lg px-3 py-2 text-white font-mono"
                 />
                 <input
                   type="text"
@@ -273,20 +274,20 @@ export default function AltoComando({
                   placeholder="Nick Roblox"
                   value={newOfficer.roblox_nick}
                   onChange={(e) => setNewOfficer({ ...newOfficer, roblox_nick: e.target.value })}
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  className="bg-slate-950/80 border border-blue-900/70 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded-lg px-3 py-2 text-white"
                 />
                 <input
                   type="text"
                   placeholder="Nome RP (Ex: Sd. Silva)"
                   value={newOfficer.rp_name}
                   onChange={(e) => setNewOfficer({ ...newOfficer, rp_name: e.target.value })}
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                  className="bg-slate-950/80 border border-blue-900/70 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded-lg px-3 py-2 text-white"
                 />
                 <select
                   value={newOfficer.rank_level}
                   onChange={(e) => setNewOfficer({ ...newOfficer, rank_level: Number(e.target.value) })}
                   style={{ colorScheme: 'dark' }}
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
+                  className="bg-slate-950/80 border border-blue-900/70 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded-lg px-2 py-2 text-white"
                 >
                   {RANKS.map((r) => (
                     <option key={r.level} value={r.level}>
@@ -295,16 +296,16 @@ export default function AltoComando({
                   ))}
                 </select>
                 <input
-                  type="text"
+                  type="password"
                   required
-                  placeholder="PIN (Ex: 1234)"
+                  placeholder="PIN funcional"
                   value={newOfficer.pin_code}
                   onChange={(e) => setNewOfficer({ ...newOfficer, pin_code: e.target.value })}
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono"
+                  className="bg-slate-950/80 border border-blue-900/70 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded-lg px-3 py-2 text-white font-mono"
                 />
                 <button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg transition"
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition shadow-[0_0_20px_rgba(37,99,235,0.25)]"
                 >
                   Cadastrar
                 </button>
