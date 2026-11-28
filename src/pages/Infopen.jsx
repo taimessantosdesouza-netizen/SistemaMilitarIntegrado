@@ -15,8 +15,22 @@ export default function Infopen({
 }) {
   return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <section className="lg:col-span-3 relative overflow-hidden rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-950/70 to-slate-950/90 p-6 shadow-lg shadow-blue-950/30">
+              <div className="flex flex-wrap items-center gap-5">
+                <img src="/gvcr.png" alt="GVCR" className="w-20 h-20 rounded-full object-cover border border-blue-400/50 shadow-[0_0_25px_#1d4ed8]" />
+                <div className="flex-1 min-w-[180px]">
+                  <p className="text-[10px] font-mono tracking-widest text-blue-400">SIGP / CENTRAL DE INTELIGÊNCIA</p>
+                  <h1 className="text-2xl md:text-3xl font-black text-white mt-2">INFOPEN</h1>
+                  <p className="text-sm text-slate-400 mt-1">Consulta de cidadãos e antecedentes criminais</p>
+                </div>
+                <div className="rounded-xl border border-blue-500/30 bg-slate-950/70 px-5 py-3">
+                  <p className="text-2xl font-bold text-blue-300">{filteredCitizens.length}</p>
+                  <p className="text-xs text-slate-400">Resultados da consulta</p>
+                </div>
+              </div>
+            </section>
             <div className="lg:col-span-2 space-y-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <div className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-5 shadow-lg shadow-blue-950/20">
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <h2 className="text-base font-bold text-white flex items-center gap-2">
                     <Users className="w-5 h-5 text-blue-400" />
@@ -27,13 +41,19 @@ export default function Infopen({
                     placeholder="Filtrar por Passaporte, Nome ou Nick..."
                     value={citizenSearch}
                     onChange={(e) => setCitizenSearch(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white w-full sm:w-64"
+                    className="bg-slate-950 border border-blue-500/30 focus:border-blue-400 focus:ring-1 focus:ring-blue-500 outline-none transition-colors rounded-xl px-3 py-2 text-xs text-white w-full sm:w-64"
                   />
                 </div>
 
                 <div className="space-y-4">
+                  {filteredCitizens.length === 0 && (
+                    <div className="rounded-xl border border-dashed border-blue-500/25 py-10 text-center text-sm text-slate-400">
+                      <Users className="w-8 h-8 mx-auto mb-3 text-blue-400/60" />
+                      Nenhum cidadão encontrado.
+                    </div>
+                  )}
                   {filteredCitizens.map((cit) => (
-                    <div key={cit.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                    <div key={cit.id} className="bg-slate-950/80 border border-blue-500/20 hover:border-blue-400/40 transition-colors rounded-xl p-4 space-y-3">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
                           <div className="flex items-center gap-2">
@@ -93,12 +113,12 @@ export default function Infopen({
                             placeholder="Adicionar nova passagem / crime..."
                             value={crimeInput[cit.id] || ''}
                             onChange={(e) => setCrimeInput({ ...crimeInput, [cit.id]: e.target.value })}
-                            className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white"
+                            className="flex-1 bg-slate-900 border border-blue-500/20 focus:border-blue-400 focus:ring-1 focus:ring-blue-500 outline-none transition-colors rounded-lg px-3 py-1.5 text-xs text-white"
                           />
                           <button
                             type="button"
                             onClick={() => handleAddCrimeRecord(cit)}
-                            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold"
+                            className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 shadow-md shadow-blue-950/40 transition-colors text-white text-xs font-bold"
                           >
                             Registrar
                           </button>
@@ -110,7 +130,7 @@ export default function Infopen({
               </div>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 h-fit">
+            <div className="bg-slate-900/80 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-5 shadow-lg shadow-blue-950/20 h-fit">
               <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
                 <Plus className="w-5 h-5 text-emerald-400" />
                 Cadastrar Cidadão no INFOPEN
@@ -124,7 +144,7 @@ export default function Infopen({
                     placeholder="Ex: PTN-1004"
                     value={newCitizen.passport}
                     onChange={(e) => setNewCitizen({ ...newCitizen, passport: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white font-mono"
+                    className="w-full bg-slate-950 border border-blue-500/20 focus:border-blue-400 focus:ring-1 focus:ring-blue-500 outline-none transition-colors rounded-lg px-3 py-2 text-white font-mono"
                   />
                 </div>
                 <div>
@@ -135,7 +155,7 @@ export default function Infopen({
                     placeholder="Ex: Lucas Almeida"
                     value={newCitizen.rp_name}
                     onChange={(e) => setNewCitizen({ ...newCitizen, rp_name: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                    className="w-full bg-slate-950 border border-blue-500/20 focus:border-blue-400 focus:ring-1 focus:ring-blue-500 outline-none transition-colors rounded-lg px-3 py-2 text-white"
                   />
                 </div>
                 <div>
@@ -145,7 +165,7 @@ export default function Infopen({
                     placeholder="Ex: lucas_rp"
                     value={newCitizen.roblox_nick}
                     onChange={(e) => setNewCitizen({ ...newCitizen, roblox_nick: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white"
+                    className="w-full bg-slate-950 border border-blue-500/20 focus:border-blue-400 focus:ring-1 focus:ring-blue-500 outline-none transition-colors rounded-lg px-3 py-2 text-white"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -155,7 +175,7 @@ export default function Infopen({
                       value={newCitizen.cnh_status}
                       onChange={(e) => setNewCitizen({ ...newCitizen, cnh_status: e.target.value })}
                       style={{ colorScheme: 'dark' }}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
+                      className="w-full bg-slate-950 border border-blue-500/20 focus:border-blue-400 focus:ring-1 focus:ring-blue-500 outline-none transition-colors rounded-lg px-2 py-2 text-white"
                     >
                       <option value="Válida">Válida</option>
                       <option value="Suspensa">Suspensa</option>
@@ -168,7 +188,7 @@ export default function Infopen({
                       value={newCitizen.wanted_status}
                       onChange={(e) => setNewCitizen({ ...newCitizen, wanted_status: e.target.value })}
                       style={{ colorScheme: 'dark' }}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white"
+                      className="w-full bg-slate-950 border border-blue-500/20 focus:border-blue-400 focus:ring-1 focus:ring-blue-500 outline-none transition-colors rounded-lg px-2 py-2 text-white"
                     >
                       <option value="Limpo">Limpo</option>
                       <option value="Procurado">Procurado</option>
@@ -186,7 +206,7 @@ export default function Infopen({
                 </label>
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition mt-2"
+                  className="w-full bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 shadow-md shadow-blue-950/40 transition-colors text-white font-bold py-2.5 rounded-xl transition mt-2"
                 >
                   Salvar Ficha no INFOPEN
                 </button>
